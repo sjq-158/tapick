@@ -1,58 +1,127 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}KITH — Multi-Branch Pharmacy{% endblock %}</title>
+    <title>{% block title %}Tapick — Never out of reach.{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/logo.jpg' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    {% with prefs=user.usersettings %}
+    <script>
+        (function () {
+            var theme = "{% if prefs %}{% if prefs.dark_mode %}dark{% else %}light{% endif %}{% endif %}";
+            try {
+                if (theme) { localStorage.setItem("tapick-theme", theme); }
+                else { theme = localStorage.getItem("tapick-theme"); }
+            } catch (e) {}
+            if (!theme) {
+                theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            }
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    {% endwith %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v={% now 'U' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-
     {% block header %}
-    {% if user.is_authenticated %}
-    <header class="header header--app">
-        <a href="{% url 'home:home' %}" class="logo-lockup">
-            <div class="logo-mark">K</div>
-            <div class="brand-text">
-                <h1>Kith</h1>
-                <p>MakiKITHa ang alagang tapat</p>
-            </div>
+    <header class="app-header">
+        <a href="{% if user.is_authenticated %}{% url 'home:home' %}{% else %}{% url 'landing:landing' %}{% endif %}" class="brand">
+            <img src="{% static 'images/logo.jpg' %}" alt="Tapick logo" class="brand-logo">
+            <span class="brand-text"><strong>Tapick</strong><small>Never out of reach.</small></span>
         </a>
-        <nav class="floating-pill-nav">
-            <a href="{% url 'home:home' %}" class="nav-icon-btn {% if request.resolver_match.app_name == 'home' %}active{% endif %}" data-tooltip="Dashboard">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+
+        {% if user.is_authenticated %}
+        <nav class="nav-pills" aria-label="Main">
+            <a href="{% url 'home:home' %}" class="nav-link {% if request.resolver_match.app_name == 'home' %}active{% endif %}">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                <span>Dashboard</span>
             </a>
-            <a href="{% url 'profiles:profile' %}" class="nav-icon-btn {% if request.resolver_match.app_name == 'profiles' %}active{% endif %}" data-tooltip="Profile">
-                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <a href="{% url 'profiles:profile' %}" class="nav-link {% if request.resolver_match.app_name == 'profiles' %}active{% endif %}">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Profile</span>
             </a>
-            <a href="{% url 'user_settings:settings' %}" class="nav-icon-btn {% if request.resolver_match.app_name == 'user_settings' %}active{% endif %}" data-tooltip="Settings">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </a>
-            <a href="{% url 'login:logout' %}" class="nav-icon-btn logout" data-tooltip="Logout">
-                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <a href="{% url 'user_settings:settings' %}" class="nav-link {% if request.resolver_match.app_name == 'user_settings' %}active{% endif %}">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>Settings</span>
             </a>
         </nav>
-    </header>
-    {% else %}
-    <header class="header">
-        <a href="{% url 'landing:landing' %}" class="logo-lockup">
-            <div class="logo-mark">K</div>
-            <div class="brand-text">
-                <h1>Kith</h1>
-                <p>MakiKITHa ang alagang tapat</p>
+
+        <div class="header-user">
+            <div class="avatar">{{ user.email|first|upper }}</div>
+            <div class="who">
+                <strong>{{ user.email }}</strong>
+                <small>{{ user.get_role_display }}</small>
             </div>
-        </a>
+            <a href="{% url 'login:logout' %}" class="icon-btn icon-btn--danger" title="Log out" aria-label="Log out">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </a>
+        </div>
+        {% else %}
+        <div class="header-links">
+            <a href="{% url 'login:login' %}" class="btn btn-ghost btn-sm">Sign In</a>
+            <a href="{% url 'register:register' %}" class="btn btn-primary btn-sm">Get Started</a>
+        </div>
+        {% endif %}
     </header>
-    {% endif %}
     {% endblock %}
+
+    {% if messages %}
+    <div class="toast-stack" id="toastStack">
+        {% for message in messages %}
+        <div class="toast toast--{{ message.tags }}" role="status">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     {% block content %}{% endblock %}
 
+    <button type="button" class="theme-fab" id="themeToggle" aria-label="Toggle dark mode"
+            data-url="{% if user.is_authenticated %}{% url 'user_settings:theme' %}{% endif %}" data-csrf="{{ csrf_token }}">
+        <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+    </button>
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            var btn = document.getElementById("themeToggle");
+
+            btn.addEventListener("click", function () {
+                var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                root.setAttribute("data-theme", next);
+                try { localStorage.setItem("tapick-theme", next); } catch (e) {}
+                window.dispatchEvent(new CustomEvent("themechange", { detail: next }));
+                if (btn.dataset.url) {
+                    fetch(btn.dataset.url, {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: { "X-CSRFToken": btn.dataset.csrf, "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "theme=" + next
+                    });
+                }
+            });
+
+            document.addEventListener("click", function (e) {
+                var toggle = e.target.closest(".toggle-password");
+                if (!toggle) return;
+                var input = document.getElementById(toggle.dataset.target);
+                if (!input) return;
+                var show = input.type === "password";
+                input.type = show ? "text" : "password";
+                toggle.classList.toggle("is-on", show);
+            });
+
+            var stack = document.getElementById("toastStack");
+            if (stack) {
+                setTimeout(function () { stack.classList.add("is-hiding"); }, 4500);
+            }
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
