@@ -1,7 +1,5 @@
-/* Tapick landing: scroll animations + feature slider + ShaderGradient background */
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ---------- 1. Scroll progress, sticky bar, preview-card tilt ---------- */
 const topbar = document.getElementById("topbar");
 const progress = document.getElementById("scrollProgress");
 const deviceWrap = document.getElementById("deviceWrap");
@@ -29,7 +27,6 @@ window.addEventListener("scroll", onScroll, { passive: true });
 window.addEventListener("resize", onScroll);
 onScroll();
 
-/* ---------- 2. Reveal on scroll (with stagger) ---------- */
 document.querySelectorAll("[data-stagger]").forEach((parent) => {
     [...parent.children].forEach((child, i) => child.style.setProperty("--i", i));
 });
@@ -76,7 +73,6 @@ if (reduceMotion || !("IntersectionObserver" in window)) {
     counters.forEach((el) => counterObserver.observe(el));
 }
 
-/* ---------- 3. Highlight the nav link of the section in view ---------- */
 const navLinks = [...document.querySelectorAll(".topnav a")];
 if ("IntersectionObserver" in window) {
     const sectionObserver = new IntersectionObserver((entries) => {
@@ -89,7 +85,6 @@ if ("IntersectionObserver" in window) {
     document.querySelectorAll("main section[id]").forEach((section) => sectionObserver.observe(section));
 }
 
-/* ---------- 4. Feature slider (arrows + keyboard; touchpad swipe is native scrolling) ---------- */
 const featureTrack = document.getElementById("featureTrack");
 if (featureTrack) {
     const prevBtn = document.querySelector(".slider-btn--prev");
@@ -97,7 +92,7 @@ if (featureTrack) {
 
     const cardStep = () => {
         const card = featureTrack.querySelector(".feature");
-        return card ? card.offsetWidth + 20 : 300;   // card width + gap
+        return card ? card.offsetWidth + 20 : 300;
     };
     const updateArrows = () => {
         prevBtn.disabled = featureTrack.scrollLeft <= 4;
@@ -115,7 +110,11 @@ if (featureTrack) {
     updateArrows();
 }
 
-/* ---------- 5. ShaderGradient background ---------- */
+const PALETTES = {
+    light: { color1: "#7DE2D1", color2: "#BEEEE6", color3: "#FFFAFB", brightness: 1.1 },
+    dark: { color1: "#339989", color2: "#2B2C28", color3: "#131515", brightness: 1.0 },
+};
+
 async function mountShaderGradient() {
     const host = document.getElementById("bgGradient");
     if (!host) return;
@@ -127,51 +126,55 @@ async function mountShaderGradient() {
             import("@shadergradient/react"),
         ]);
         const h = React.createElement;
+        const root = createRoot(host);
 
-        createRoot(host).render(
-            h(
-                ShaderGradientCanvas,
-                {
-                    style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
-                    pixelDensity: 1,
-                    fov: 45,
-                    pointerEvents: "none",
-                    lazyLoad: false,
-                },
-                h(ShaderGradient, {
-                    control: "props",
-                    type: "waterPlane",
-                    animate: reduceMotion ? "off" : "on",
-                    uTime: 0,
-                    uSpeed: 0.2,
-                    uStrength: 3.4,
-                    uDensity: 1.2,
-                    uFrequency: 0,
-                    uAmplitude: 0,
-                    positionX: 0,
-                    positionY: 0.9,
-                    positionZ: -0.3,
-                    rotationX: 45,
-                    rotationY: 0,
-                    rotationZ: 0,
-                    color1: "#A6E7D1",
-                    color2: "#5BC0BE",
-                    color3: "#E8F9F8",
-                    reflection: 0.1,
-                    cAzimuthAngle: 170,
-                    cPolarAngle: 70,
-                    cDistance: 4.4,
-                    cameraZoom: 1,
-                    brightness: 1.2,
-                    lightType: "3d",
-                    envPreset: "city",
-                    grain: "off",
-                    wireframe: false,
-                })
-            )
-        );
+        const draw = () => {
+            const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+            root.render(
+                h(
+                    ShaderGradientCanvas,
+                    {
+                        key: theme,
+                        style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" },
+                        pixelDensity: 1,
+                        fov: 45,
+                        pointerEvents: "none",
+                        lazyLoad: false,
+                    },
+                    h(ShaderGradient, {
+                        control: "props",
+                        type: "waterPlane",
+                        animate: reduceMotion ? "off" : "on",
+                        uTime: 0,
+                        uSpeed: 0.2,
+                        uStrength: 3.4,
+                        uDensity: 1.2,
+                        uFrequency: 0,
+                        uAmplitude: 0,
+                        positionX: 0,
+                        positionY: 0.9,
+                        positionZ: -0.3,
+                        rotationX: 45,
+                        rotationY: 0,
+                        rotationZ: 0,
+                        reflection: 0.1,
+                        cAzimuthAngle: 170,
+                        cPolarAngle: 70,
+                        cDistance: 4.4,
+                        cameraZoom: 1,
+                        lightType: "3d",
+                        envPreset: "city",
+                        grain: "off",
+                        wireframe: false,
+                        ...PALETTES[theme],
+                    })
+                )
+            );
+        };
+
+        draw();
+        window.addEventListener("themechange", draw);
     } catch (err) {
-        // The CSS gradient on .bg-gradient stays as the fallback.
         console.warn("ShaderGradient could not load, using the CSS fallback.", err);
     }
 }
