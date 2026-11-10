@@ -1,18 +1,234 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — Kith Multi-Branch Pharmacy{% endblock %}
+{% block title %}Dashboard — Tapick{% endblock %}
 
 {% block content %}
-<main class="page-center">
-    <div class="dashboard-card">
-        <div class="user-avatar">
-            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+<main class="page">
+    <header class="page-head">
+        <div>
+            <p class="kicker">{% now "l, F j, Y" %}</p>
+            <h1>Welcome back, {{ display_name }}</h1>
+            <p class="muted">{{ role_label }}{% if user.branch %} &middot; {{ user.branch }}{% endif %}{% if user.company %} &middot; {{ user.company }}{% endif %}</p>
         </div>
-        <h2>Welcome</h2>
-        <p class="welcome-desc">You're logged in to the KITH multi-branch pharmacy inventory system.</p>
-        <p class="user-meta">
-            {{ user.email }} &middot; {{ user.get_role_display }}{% if user.branch %} &middot; {{ user.branch }}{% endif %}
-        </p>
-    </div>
+        <div class="page-actions">
+            <a href="{% url 'profiles:profile' %}" class="btn btn-ghost">Edit profile</a>
+            {% if is_admin %}
+            <a href="{% url 'admin:index' %}" class="btn btn-primary">Manage data</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="stat-grid" aria-label="Overview">
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 0 1 7-7l7 7a4.95 4.95 0 0 1-7 7z"></path><path d="m8.5 8.5 7 7"></path></svg></div>
+            <div>
+                <p class="stat-label">Medicines</p>
+                <p class="stat-value">{{ medicines_count }}</p>
+                <p class="stat-hint">Active in the catalogue</p>
+            </div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+            <div>
+                <p class="stat-label">In stock</p>
+                <p class="stat-value">{{ in_stock_count }}</p>
+                <p class="stat-hint">of {{ inventory_total }} tracked item{{ inventory_total|pluralize }}</p>
+            </div>
+        </article>
+        <article class="stat-card stat-card--warn">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+            <div>
+                <p class="stat-label">Low stock</p>
+                <p class="stat-value">{{ low_count }}</p>
+                <p class="stat-hint">At or below reorder level</p>
+            </div>
+        </article>
+        <article class="stat-card stat-card--danger">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+            <div>
+                <p class="stat-label">Out of stock</p>
+                <p class="stat-value">{{ out_count }}</p>
+                <p class="stat-hint">Nothing on hand</p>
+            </div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
+            <div>
+                <p class="stat-label">Sales today</p>
+                <p class="stat-value">{{ sales_count }}</p>
+                <p class="stat-hint">&#8369;{{ revenue_today|floatformat:"2g" }} revenue</p>
+            </div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+            <div>
+                <p class="stat-label">Unread alerts</p>
+                <p class="stat-value">{{ unread_count }}</p>
+                <p class="stat-hint">Notifications for you</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid-main">
+        <article class="card">
+            <div class="card-head">
+                <h2>Stock alerts</h2>
+                <span class="badge badge--muted">{{ scope_label }}</span>
+            </div>
+            {% if alerts %}
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            {% if scope_count > 1 %}<th>Branch</th>{% endif %}
+                            <th class="num">On hand</th>
+                            <th class="num">Reorder at</th>
+                            <th>Status</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in alerts %}
+                        <tr>
+                            <td><strong>{{ row.medicine.medicine_name }}</strong><small>{{ row.medicine.generic_name }}</small></td>
+                            {% if scope_count > 1 %}<td>{{ row.branch.branch_name }}</td>{% endif %}
+                            <td class="num">{{ row.quantity_on_hand }} <small>{{ row.medicine.unit_of_measure }}</small></td>
+                            <td class="num">{{ row.reorder_threshold }}</td>
+                            <td>
+                                {% if row.quantity_on_hand <= 0 %}<span class="badge badge--danger">Out of stock</span>
+                                {% else %}<span class="badge badge--warn">Low stock</span>{% endif %}
+                            </td>
+                            <td><small>{{ row.last_updated|timesince }} ago</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                <h3>No stock alerts</h3>
+                {% if inventory_total %}
+                <p>Every tracked item is above its reorder level.</p>
+                {% elif is_admin %}
+                <p>No inventory records yet. Add medicines and branch stock from the admin panel.</p>
+                {% else %}
+                <p>No inventory records yet. Ask an administrator to add stock records.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </article>
+
+        <article class="card">
+            <div class="card-head"><h2>My account</h2></div>
+            <dl class="details">
+                <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+                <div><dt>Role</dt><dd>{{ role_label }}</dd></div>
+                <div><dt>Branch</dt><dd>{{ user.branch|default:"Not assigned" }}</dd></div>
+                <div><dt>Company</dt><dd>{{ user.company|default:"Not assigned" }}</dd></div>
+                <div><dt>Phone</dt><dd>{{ phone|default:"Not set" }}</dd></div>
+                {% if license_number %}<div><dt>License</dt><dd>{{ license_number }}</dd></div>{% endif %}
+            </dl>
+        </article>
+    </section>
+
+    <section class="grid-even">
+        <article class="card">
+            <div class="card-head"><h2>Recent sales</h2></div>
+            {% if recent_sales %}
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Sale</th>
+                            {% if scope_count > 1 %}<th>Branch</th>{% endif %}
+                            <th>Cashier</th>
+                            <th class="num">Total</th>
+                            <th>When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td>#{{ sale.sale_id }}</td>
+                            {% if scope_count > 1 %}<td>{{ sale.branch.branch_name }}</td>{% endif %}
+                            <td><small>{{ sale.user.email }}</small></td>
+                            <td class="num">&#8369;{{ sale.total_amount|floatformat:"2g" }}</td>
+                            <td><small>{{ sale.sold_at|date:"M j, g:i A" }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                <svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                <h3>No sales recorded</h3>
+                <p>Transactions logged for {{ scope_label }} will appear here.</p>
+            </div>
+            {% endif %}
+        </article>
+
+        <article class="card">
+            <div class="card-head">
+                <h2>Notifications</h2>
+                {% if unread_count %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_read">
+                    <button type="submit" class="btn btn-ghost btn-sm">Mark all read</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if notifications %}
+            <ul class="feed">
+                {% for note in notifications %}
+                <li class="{% if not note.is_read %}is-unread{% endif %}">
+                    <span class="feed-dot"></span>
+                    <div>
+                        <strong>{{ note.title }}</strong>
+                        <p>{{ note.message }}</p>
+                        <small>{{ note.medicine }} &middot; {{ note.branch }} &middot; {{ note.created_at|timesince }} ago</small>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty">
+                <svg class="icon-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <h3>You're all caught up</h3>
+                <p>Stock alerts sent to you will show up here.</p>
+            </div>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2>Branch directory</h2>
+            <span class="badge badge--muted">{{ branches|length }} branch{{ branches|length|pluralize:"es" }}</span>
+        </div>
+        {% if branches %}
+        <div class="branch-grid">
+            {% for branch in branches %}
+            <div class="branch-card {% if branch.branch_id == user.branch_id %}is-mine{% endif %}">
+                <div class="branch-card-head">
+                    <strong>{{ branch.branch_name }}</strong>
+                    {% if branch.branch_id == user.branch_id %}<span class="badge badge--ok">Your branch</span>{% endif %}
+                </div>
+                <p>{{ branch.street_address }}, {{ branch.city }} {{ branch.postal_code }}</p>
+                <a href="tel:{{ branch.branch_phone }}" class="branch-phone">{{ branch.branch_phone }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <h3>No branches yet</h3>
+            <p>{% if is_admin %}Add companies and branches from the admin panel.{% else %}Branches added by an administrator will be listed here.{% endif %}</p>
+        </div>
+        {% endif %}
+    </section>
 </main>
 {% endblock %}
