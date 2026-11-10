@@ -1,74 +1,277 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Kith — Multi-Branch Pharmacy Inventory{% endblock %}
+{% block title %}Tapick — Never out of reach.{% endblock %}
 
 {% block extra_css %}
+<link rel="icon" href="{% static 'images/logo.jpg' %}">
 <link rel="stylesheet" href="{% static 'css/landing/landing.css' %}?v={% now 'U' %}">
 {% endblock %}
 
 {% block header %}
-<header class="header">
-    <a href="{% url 'landing:landing' %}" class="logo-lockup">
-        <div class="logo-mark">K</div>
-        <div class="brand-text">
-            <h1>Kith</h1>
-            <p>MakiKITHa ang alagang tapat</p>
-        </div>
+<div class="scroll-progress" id="scrollProgress"></div>
+<header class="topbar" id="topbar">
+    <a href="#top" class="brand">
+        <img src="{% static 'images/logo.jpg' %}" alt="Tapick logo" class="brand-logo">
+        <span>Tapick</span>
     </a>
-    <!-- <nav class="nav-items">
-        <a href="{% url 'landing:landing' %}" class="active">Overview</a>
-        <a href="#">Inventory</a>
-        <a href="#">Network</a>
-    </nav> -->
-    <div class="nav-actions">
-        <a href="{% url 'login:login' %}" class="btn-text">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            Sign In
+    <nav class="topnav">
+        <a href="#features">Features</a>
+        <a href="#locator">Stock Locator</a>
+        <a href="#how">How it works</a>
+        <a href="#scope">Scope</a>
+    </nav>
+    <div class="topbar-actions">
+        <a href="{% url 'login:login' %}" class="link-btn">Sign In</a>
+        <a href="{% url 'register:register' %}" class="pill-btn">
+            Get Started
+            <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </a>
-        <a href="{% url 'register:register' %}" class="btn-primary">Get Started <svg class="btn-icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a>
     </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<main class="hero">
-    <div class="hero-content">
-        <h1>Unified multi-branch pharmacy <span>inventory.</span></h1>
-        <p>Empower your pharmacy network with real-time stock orchestration, automated dispensing logs, and multi-location medical supplies tracking.</p>
+<div class="bg-gradient" id="bgGradient" aria-hidden="true"></div>
 
-        <div class="hero-cta-group">
-            <a href="{% url 'login:login' %}" class="btn-primary btn-lg">
-                <svg class="btn-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                Launch System
-            </a>
-            <a href="{% url 'login:login' %}" class="btn-text btn-muted">View live records &rarr;</a>
+<main>
+    <!-- ================= HERO ================= -->
+    <section class="hero" id="top">
+        <span class="eyebrow">Multi-branch pharmacy inventory</span>
+
+        <h1 class="outline-title hero-title" aria-label="Never out of reach.">
+            <span class="line">
+                <span class="word"><span class="word-inner" style="--i:0">Never</span></span>
+                <span class="word"><span class="word-inner" style="--i:1">out</span></span>
+            </span>
+            <span class="line">
+                <span class="word"><span class="word-inner" style="--i:2">of</span></span>
+                <span class="word"><span class="word-inner" style="--i:3">reach.</span></span>
+            </span>
+        </h1>
+
+        <p class="hero-lead" data-reveal style="--i:4">
+            When a medicine runs out at your branch, Tapick instantly shows the nearest branch that has it in stock. No more phone calls between branches.
+        </p>
+
+        <div class="device-wrap" id="deviceWrap">
+            <div class="device" id="device">
+                <div class="device-bar">
+                    <i></i><i></i><i></i>
+                    <span>tapick / stock locator &middot; sample data</span>
+                </div>
+                <div class="device-body">
+                    <div class="device-head">
+                        <div>
+                            <small>Searching for</small>
+                            <h3>Paracetamol 500 mg</h3>
+                        </div>
+                        <span class="chip chip--warn">Out of stock &middot; Colon Branch</span>
+                    </div>
+                    <ul class="branch-list bars">
+                        <li class="best">
+                            <div class="branch-info"><strong>Mandaue Branch</strong><small>3.2 km away &middot; updated 4 s ago</small></div>
+                            <b>48 units</b>
+                            <div class="bar"><span style="--w:92%"></span></div>
+                        </li>
+                        <li>
+                            <div class="branch-info"><strong>Lahug Branch</strong><small>4.8 km away &middot; updated 9 s ago</small></div>
+                            <b>21 units</b>
+                            <div class="bar"><span style="--w:55%"></span></div>
+                        </li>
+                        <li>
+                            <div class="branch-info"><strong>Talisay Branch</strong><small>9.1 km away &middot; updated 2 s ago</small></div>
+                            <b>6 units</b>
+                            <div class="bar"><span style="--w:18%"></span></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= TARGETS ================= -->
+    <section class="section stats" aria-label="Project targets">
+        <div class="stats-grid" data-stagger>
+            <div class="stat glass" data-reveal>
+                <div class="stat-num outline-title"><span data-count="5" data-prefix="&lt; " data-suffix=" s">0</span></div>
+                <p>for a stock change to appear across every branch</p>
+            </div>
+            <div class="stat glass" data-reveal>
+                <div class="stat-num outline-title"><span data-count="90" data-prefix="&ge; " data-suffix="%">0</span></div>
+                <p>accuracy for the rule-based alert engine</p>
+            </div>
+            <div class="stat glass" data-reveal>
+                <div class="stat-num outline-title"><span data-count="10" data-suffix="">0</span></div>
+                <p>core modules from sign-in to sales logging</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= FEATURES (slider) ================= -->
+    <section class="section" id="features">
+        <div class="section-head" data-reveal>
+            <h2>Everything a branch network <span class="outline">needs.</span></h2>
+            <p>One centralized system for stock, sales, and alerts across every branch of your pharmacy.</p>
         </div>
 
-        <div class="feature-ticker">
-            <div class="ticker-card">
-                <div class="ticker-icon">
-                    <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                </div>
-                <span>Secure &amp; Compliant</span>
+        <div class="slider">
+            <button class="slider-btn slider-btn--prev" type="button" aria-label="Previous feature">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+
+            <div class="slider-track" id="featureTrack" tabindex="0" aria-label="Tapick features">
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                    <h3>Cross-branch Stock Locator</h3>
+                    <p>Checks other branches when you run out, and ranks them by distance.</p>
+                </article>
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+                    <h3>Inventory Management</h3>
+                    <p>Access and update medicine stock, prices, and levels per branch.</p>
+                </article>
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+                    <h3>Real-time Notifications</h3>
+                    <p>A rule-based alert engine notifies staff the moment a condition is met.</p>
+                </article>
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                    <h3>Sales Logging</h3>
+                    <p>Records every transaction and deducts sold items from branch inventory.</p>
+                </article>
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
+                    <h3>Branch Directory</h3>
+                    <p>Every branch with contact details and location, powering the stock locator.</p>
+                </article>
+                <article class="feature glass" data-reveal>
+                    <div class="feature-icon"><svg class="icon-lg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                    <h3>Secure Accounts</h3>
+                    <p>Register, sign in, and manage your profile and settings from your dashboard.</p>
+                </article>
             </div>
-            <div class="ticker-card">
-                <div class="ticker-icon">
-                    <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                </div>
-                <span>Real-time Tracking</span>
+
+            <button class="slider-btn slider-btn--next" type="button" aria-label="Next feature">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- ================= STOCK LOCATOR ================= -->
+    <section class="section" id="locator">
+        <div class="split">
+            <div class="split-text" data-reveal="left">
+                <h2>Out of stock here? <span class="outline">Find it next door.</span></h2>
+                <p>Instead of calling around, search once. Tapick looks across your branches and shows the closest one with the medicine on the shelf.</p>
+                <ul class="checks">
+                    <li>Stock levels, branch locations, and timestamps in one view</li>
+                    <li>Nearest branch first, ranked by distance</li>
+                    <li>Updates reflected system-wide within 5 seconds</li>
+                </ul>
+                <a href="{% url 'register:register' %}" class="pill-btn">Create your account</a>
             </div>
-            <div class="ticker-card">
-                <div class="ticker-icon">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                </div>
-                <span>Multi-Branch Sync</span>
+
+            <div class="glass locator-card" data-reveal="right">
+                <div class="locator-title"><small>Nearest branches with stock</small><h3>Amoxicillin 500 mg</h3></div>
+                <ul class="branch-list bars">
+                    <li class="best">
+                        <div class="branch-info"><strong>Lahug Branch</strong><small>1.9 km away</small></div>
+                        <b>35 units</b>
+                        <div class="bar"><span style="--w:80%"></span></div>
+                    </li>
+                    <li>
+                        <div class="branch-info"><strong>Mandaue Branch</strong><small>3.2 km away</small></div>
+                        <b>14 units</b>
+                        <div class="bar"><span style="--w:40%"></span></div>
+                    </li>
+                    <li>
+                        <div class="branch-info"><strong>Talisay Branch</strong><small>9.1 km away</small></div>
+                        <b>4 units</b>
+                        <div class="bar"><span style="--w:12%"></span></div>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="hero-visual">
-        <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80" alt="Pharmacy Inventory Software Interface">
-    </div>
+    <!-- ================= HOW IT WORKS ================= -->
+    <section class="section" id="how">
+        <div class="section-head" data-reveal>
+            <h2>Three steps. <span class="outline">Zero phone calls.</span></h2>
+        </div>
+
+        <div class="steps" data-stagger>
+            <div class="step" data-reveal>
+                <div class="step-num outline-title">1</div>
+                <h3>Search</h3>
+                <p>Look up a medicine in your own branch inventory.</p>
+            </div>
+            <div class="step" data-reveal>
+                <div class="step-num outline-title">2</div>
+                <h3>Locate</h3>
+                <p>If it is out of stock, see the nearest branch that has it, with units and distance.</p>
+            </div>
+            <div class="step" data-reveal>
+                <div class="step-num outline-title">3</div>
+                <h3>Act</h3>
+                <p>Get an alert and decide. Pharmacists always stay in control.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= SCOPE ================= -->
+    <section class="section" id="scope">
+        <div class="section-head" data-reveal>
+            <h2>Built to support pharmacists, <span class="outline">not replace them.</span></h2>
+            <p>Tapick stays focused on stock, price, and branch location.</p>
+        </div>
+
+        <div class="scope-grid" data-stagger>
+            <div class="scope glass" data-reveal><h3>No clinical data</h3><p>No dosage, molecular, or efficacy data is stored or processed.</p></div>
+            <div class="scope glass" data-reveal><h3>No logistics tracking</h3><p>Delivery, courier, and transfer logistics are outside the system.</p></div>
+            <div class="scope glass" data-reveal><h3>Single-company scope</h3><p>Manages the branches of one pharmaceutical company only.</p></div>
+            <div class="scope glass" data-reveal><h3>Decision support</h3><p>Licensed pharmacists decide whether to act on a notification.</p></div>
+        </div>
+    </section>
+
+    <!-- ================= FINAL CTA ================= -->
+    <section class="section cta-section">
+        <div class="cta glass" data-reveal="zoom">
+            <h2 class="outline-title">Ready to reach every branch?</h2>
+            <p>Create your account and start tracking stock across your pharmacy network.</p>
+            <div class="hero-cta">
+                <a href="{% url 'register:register' %}" class="pill-btn pill-btn--lg">Create Account</a>
+                <a href="{% url 'login:login' %}" class="ghost-btn">Sign In</a>
+            </div>
+        </div>
+    </section>
 </main>
+
+<footer class="footer">
+    <a href="#top" class="brand">
+        <img src="{% static 'images/logo.jpg' %}" alt="Tapick logo" class="brand-logo">
+        <span>Tapick</span>
+    </a>
+    <p>Never out of reach. &middot; CSIT327 &middot; Cebu Institute of Technology &ndash; University</p>
+    <nav>
+        <a href="{% url 'login:login' %}">Sign In</a>
+        <a href="{% url 'register:register' %}">Register</a>
+        <a href="#top">Back to top &uarr;</a>
+    </nav>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script type="importmap">
+{
+    "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+        "@shadergradient/react": "https://esm.sh/@shadergradient/react@2.4.20?deps=react@18.3.1,react-dom@18.3.1,three@0.169.0,@react-three/fiber@8.17.10"
+    }
+}
+</script>
+<script type="module" src="{% static 'js/landing/landing.js' %}?v={% now 'U' %}"></script>
 {% endblock %}
