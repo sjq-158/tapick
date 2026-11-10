@@ -1,36 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile — Kith Multi-Branch Pharmacy{% endblock %}
+{% block title %}My Profile — Tapick{% endblock %}
 
 {% block content %}
-<main class="page-center">
-    <div class="form-card">
-        <h2>My Profile</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="field-group">
-                <label for="first_name">First Name</label>
-                <input type="text" name="first_name" id="first_name" value="{{ profile.first_name }}" required>
-            </div>
-            <div class="field-group">
-                <label for="last_name">Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="{{ profile.last_name }}" required>
-            </div>
-            <div class="field-group">
-                <label for="phone">Phone</label>
-                <input type="text" name="phone" id="phone" value="{{ phone }}">
-            </div>
-            {% if has_license %}
-            <div class="field-group">
-                <label for="license_number">License Number</label>
-                <input type="text" name="license_number" id="license_number" value="{{ profile.license_number }}">
-            </div>
-            {% endif %}
-            <button type="submit" class="btn-submit">
-                <svg class="btn-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                Save Changes
-            </button>
-        </form>
+<main class="page page--narrow">
+    <header class="page-head">
+        <div>
+            <p class="kicker">Account</p>
+            <h1>My profile</h1>
+            <p class="muted">Keep your details up to date.</p>
+        </div>
+    </header>
+
+    <div class="grid-aside">
+        <aside class="card profile-card">
+            <div class="avatar avatar--lg">{{ initials }}</div>
+            <h2>{{ display_name }}</h2>
+            <span class="badge badge--ok">{{ user.get_role_display }}</span>
+            <dl class="details">
+                <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+                <div><dt>Branch</dt><dd>{{ user.branch|default:"Not assigned" }}</dd></div>
+                <div><dt>Company</dt><dd>{{ user.company|default:"Not assigned" }}</dd></div>
+                <div><dt>Member since</dt><dd>{{ user.created_at|date:"F j, Y" }}</dd></div>
+            </dl>
+        </aside>
+
+        <section class="card">
+            <div class="card-head"><h2>Personal details</h2></div>
+            <form method="post" class="form-grid">
+                {% csrf_token %}
+                <div class="field-group half">
+                    <label for="first_name">First name</label>
+                    <input type="text" name="first_name" id="first_name" value="{{ profile.first_name }}" maxlength="255" required>
+                </div>
+                <div class="field-group half">
+                    <label for="last_name">Last name</label>
+                    <input type="text" name="last_name" id="last_name" value="{{ profile.last_name }}" maxlength="255" required>
+                </div>
+                <div class="field-group half">
+                    <label for="phone">Phone</label>
+                    <input type="text" name="phone" id="phone" value="{{ phone }}" maxlength="20" placeholder="+63 900 000 0000">
+                </div>
+                {% if has_license %}
+                <div class="field-group half">
+                    <label for="license_number">License number</label>
+                    <input type="text" name="license_number" id="license_number" value="{{ profile.license_number }}" maxlength="100" placeholder="PRC-0000000">
+                </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary btn-block">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Save changes
+                </button>
+            </form>
+        </section>
     </div>
 </main>
 {% endblock %}
