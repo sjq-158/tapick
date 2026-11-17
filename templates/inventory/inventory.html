@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventory — Tapick{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/inventory/inventory.css' %}?v={% now 'U' %}">
+{% endblock %}
+
+{% block content %}
+<main class="page">
+    <header class="page-head">
+        <div>
+            <p class="kicker">Inventory</p>
+            <h1>Inventory management</h1>
+            <p class="muted">{{ scope_label }} &middot; stock levels update for everyone as soon as you save.</p>
+        </div>
+        <div class="page-actions">
+            {% if can_manage_catalogue %}
+            <button type="button" class="btn btn-ghost" data-open="medicineDialog">New medicine</button>
+            {% endif %}
+            <button type="button" class="btn btn-primary" data-open="addDialog">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add stock record
+            </button>
+        </div>
+    </header>
+
+    <section class="stat-grid stat-grid--4" aria-label="Stock summary">
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
+            <div><p class="stat-label">Tracked</p><p class="stat-value">{{ counts.total }}</p></div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+            <div><p class="stat-label">Healthy</p><p class="stat-value">{{ counts.ok }}</p></div>
+        </article>
+        <article class="stat-card stat-card--warn">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+            <div><p class="stat-label">Low stock</p><p class="stat-value">{{ counts.low }}</p></div>
+        </article>
+        <article class="stat-card stat-card--danger">
+            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+            <div><p class="stat-label">Out of stock</p><p class="stat-value">{{ counts.out }}</p></div>
+        </article>
+    </section>
+
+    <section class="card">
+        <form method="get" class="inv-filters">
+            <div class="field-group">
+                <label for="q">Search</label>
+                <input type="search" name="q" id="q" value="{{ q }}" placeholder="Name, generic, brand or category">
+            </div>
+            {% if scope_count > 1 %}
+            <div class="field-group">
+                <label for="branch">Branch</label>
+                <select name="branch" id="branch">
+                    <option value="">All branches</option>
+                    {% for b in branches %}
+                    <option value="{{ b.branch_id }}" {% if branch_id == b.branch_id|stringformat:"s" %}selected{% endif %}>{{ b.branch_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="field-group">
+                <label for="status">Status</label>
+                <select name="status" id="status">
+                    <option value="">All</option>
+                    <option value="ok" {% if status == 'ok' %}selected{% endif %}>Healthy</option>
+                    <option value="low" {% if status == 'low' %}selected{% endif %}>Low stock</option>
+                    <option value="out" {% if status == 'out' %}selected{% endif %}>Out of stock</option>
+                </select>
+            </div>
+            <div class="inv-filter-actions">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% if q or branch_id or status %}<a href="{% url 'inventory:list' %}" class="btn btn-ghost">Reset</a>{% endif %}
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        {% if rows %}
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        {% if scope_count > 1 %}<th>Branch</th>{% endif %}
+                        <th class="num">On hand</th>
+                        <th class="num">Reorder at</th>
+                        <th>Status</th>
+                        <th class="num">Price</th>
+                        <th>Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.medicine.medicine_name }}</strong>
+                            <small>{{ row.medicine.generic_name }} &middot; {{ row.medicine.category }}{% if row.medicine.requires_prescription %} &middot; Rx{% endif %}</small>
+                            {% if row.status != 'ok' and row.elsewhere %}
+                            <span class="elsewhere">In stock at: {% for o in row.elsewhere|slice:":3" %}{{ o.branch.branch_name }} ({{ o.quantity_on_hand }}){% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                            {% elif row.status != 'ok' %}
+                            <span class="elsewhere elsewhere--none">No other branch has stock</span>
+                            {% endif %}
+                        </td>
+                        {% if scope_count > 1 %}<td>{{ row.branch.branch_name }}</td>{% endif %}
+                        <td class="num">{{ row.quantity_on_hand }} <small>{{ row.medicine.unit_of_measure }}</small></td>
+                        <td class="num">{{ row.reorder_threshold }}</td>
+                        <td>
+                            {% if row.status == 'out' %}<span class="badge badge--danger">Out of stock</span>
+                            {% elif row.status == 'low' %}<span class="badge badge--warn">Low stock</span>
+                            {% else %}<span class="badge badge--ok">Healthy</span>{% endif %}
+                        </td>
+                        <td class="num">&#8369;{{ row.medicine.unit_price|floatformat:"2g" }}</td>
+                        <td><small>{{ row.last_updated|timesince }} ago</small></td>
+                        <td>
+                            <div class="row-actions">
+                                {% if row.status != 'ok' and row.elsewhere %}
+                                <form method="post" action="{% url 'inventory:request_stock' row.inventory_id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-ghost btn-sm">Request stock</button>
+                                </form>
+                                {% endif %}
+                                <button type="button" class="btn btn-primary btn-sm" data-adjust
+                                        data-url="{% url 'inventory:update' row.inventory_id %}"
+                                        data-name="{{ row.medicine.medicine_name }}"
+                                        data-branch="{% if scope_count > 1 %}{{ row.branch.branch_name }}{% endif %}"
+                                        data-qty="{{ row.quantity_on_hand }}"
+                                        data-unit="{{ row.medicine.unit_of_measure }}"
+                                        data-threshold="{{ row.reorder_threshold }}">Update</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page.has_other_pages %}
+        <nav class="pager" aria-label="Pages">
+            {% if page.has_previous %}<a class="btn btn-ghost btn-sm" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}
+            <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+            {% if page.has_next %}<a class="btn btn-ghost btn-sm" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="empty">
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <h3>{% if q or branch_id or status %}No stock matches these filters{% else %}No stock records yet{% endif %}</h3>
+            <p>
+                {% if q or branch_id or status %}Try a different search or reset the filters.
+                {% elif medicines %}Use "Add stock record" to start tracking a medicine.
+                {% elif can_manage_catalogue %}Add a medicine to the catalogue first, then add stock for it.
+                {% elif is_admin %}Add companies, branches and medicines from the admin panel first.
+                {% else %}Ask a head pharmacist to add medicines to the catalogue first.{% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<dialog class="modal" id="adjustDialog">
+    <form method="post" class="modal-card">
+        {% csrf_token %}
+        <div class="modal-head">
+            <h2>Update stock</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <p class="muted modal-sub"><strong id="adjustName"></strong><br>Currently <span id="adjustOnHand"></span></p>
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="adjust_action">Action</label>
+                <select name="action" id="adjust_action">
+                    <option value="add">Add stock (received)</option>
+                    <option value="remove">Remove stock (damaged, expired)</option>
+                    <option value="set">Set exact quantity</option>
+                </select>
+            </div>
+            <div class="field-group half">
+                <label for="adjust_amount">Amount</label>
+                <input type="number" name="amount" id="adjust_amount" min="0" required>
+            </div>
+            <div class="field-group half">
+                <label for="adjust_threshold">Reorder level</label>
+                <input type="number" name="reorder_threshold" id="adjust_threshold" min="0">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="modal" id="addDialog">
+    <form method="post" action="{% url 'inventory:add' %}" class="modal-card">
+        {% csrf_token %}
+        <div class="modal-head">
+            <h2>Add stock record</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <p class="muted modal-sub">Start tracking a catalogue medicine at a branch.</p>
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="add_medicine">Medicine</label>
+                <select name="medicine" id="add_medicine" required>
+                    <option value="">Select a medicine</option>
+                    {% for m in medicines %}<option value="{{ m.medicine_id }}">{{ m.medicine_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="add_branch">Branch</label>
+                <select name="branch" id="add_branch" required>
+                    {% if scope_count > 1 %}<option value="">Select a branch</option>{% endif %}
+                    {% for b in branches %}<option value="{{ b.branch_id }}">{{ b.branch_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="field-group half">
+                <label for="add_quantity">Quantity on hand</label>
+                <input type="number" name="quantity_on_hand" id="add_quantity" min="0" value="0" required>
+            </div>
+            <div class="field-group half">
+                <label for="add_threshold">Reorder level</label>
+                <input type="number" name="reorder_threshold" id="add_threshold" min="0" value="10" required>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Add record</button>
+        </div>
+    </form>
+</dialog>
+
+{% if can_manage_catalogue %}
+<dialog class="modal" id="medicineDialog">
+    <form method="post" action="{% url 'inventory:add_medicine' %}" class="modal-card">
+        {% csrf_token %}
+        <div class="modal-head">
+            <h2>New medicine</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <p class="muted modal-sub">Adds to your company catalogue. Tapick stores name, price and stock only.</p>
+        <div class="form-grid">
+            <div class="field-group"><label for="med_name">Medicine name</label><input type="text" name="medicine_name" id="med_name" maxlength="255" placeholder="Paracetamol 500 mg" required></div>
+            <div class="field-group half"><label for="med_generic">Generic name</label><input type="text" name="generic_name" id="med_generic" maxlength="255" required></div>
+            <div class="field-group half"><label for="med_brand">Brand name</label><input type="text" name="brand_name" id="med_brand" maxlength="255" required></div>
+            <div class="field-group half"><label for="med_category">Category</label><input type="text" name="category" id="med_category" maxlength="100" placeholder="Pain relief" required></div>
+            <div class="field-group half"><label for="med_unit">Unit</label><input type="text" name="unit_of_measure" id="med_unit" maxlength="50" placeholder="tablets" required></div>
+            <div class="field-group half"><label for="med_price">Unit price (&#8369;)</label><input type="number" name="unit_price" id="med_price" min="0" step="0.01" required></div>
+            <label class="check-row"><input type="checkbox" name="requires_prescription"> Requires a prescription</label>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Add medicine</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/inventory/inventory.js' %}?v={% now 'U' %}"></script>
+{% endblock %}
