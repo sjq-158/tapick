@@ -42,5 +42,6 @@ urlpatterns = [
     path("profile/", include("apps.profiles.urls")),
     path("settings/", include("apps.user_settings.urls")),
     path("dashboard/", include("apps.home.urls")),
+    path("notifications/", include("apps.notifications.urls")),
     path("", include("apps.landing.urls")),
 ]
