@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     "apps.home",
     "apps.profiles",
     "apps.user_settings",
+    "apps.inventory",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,7 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 LOGIN_URL = "login:login"
