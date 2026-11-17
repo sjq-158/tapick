@@ -91,6 +91,16 @@ def serialize(note):
 
 
 @login_required
+def recent(request):
+    """Return the 5 most-recent notifications for the header dropdown panel."""
+    rows = mine(request).select_related("medicine", "branch").order_by("-created_at", "-notification_id")[:5]
+    return JsonResponse({
+        "unread": mine(request).filter(is_read=False).count(),
+        "items": [serialize(note) for note in rows],
+    })
+
+
+@login_required
 def poll(request):
     rows = mine(request)
     latest = rows.order_by("-notification_id").values_list("notification_id", flat=True).first() or 0

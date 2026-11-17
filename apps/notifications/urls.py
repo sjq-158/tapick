@@ -6,6 +6,7 @@ app_name = "notifications"
 
 urlpatterns = [
     path("", views.NotificationScreen.as_view(), name="list"),
+    path("recent/", views.recent, name="recent"),
     path("poll/", views.poll, name="poll"),
     path("read-all/", views.mark_all_read, name="read_all"),
     path("<int:pk>/read/", views.mark_read, name="read"),
