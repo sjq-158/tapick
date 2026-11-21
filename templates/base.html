@@ -29,6 +29,12 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% block background_canvas %}
+    <!-- ShaderGradient Dynamic Canvas & Ambient Overlay (Across All Screens) -->
+    <canvas id="shaderGradientCanvas" class="shader-gradient-bg" aria-hidden="true"></canvas>
+    <div class="shader-gradient-overlay" aria-hidden="true"></div>
+    {% endblock %}
+
     {% block header %}
     <header class="app-header">
         <a href="{% if user.is_authenticated %}{% url 'home:home' %}{% else %}{% url 'landing:landing' %}{% endif %}" class="brand">
@@ -46,33 +52,64 @@
                 <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 <span>Inventory</span>
             </a>
-            <a href="{% url 'profiles:profile' %}" class="nav-link {% if request.resolver_match.app_name == 'profiles' %}active{% endif %}">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span>Profile</span>
-            </a>
-            <a href="{% url 'user_settings:settings' %}" class="nav-link {% if request.resolver_match.app_name == 'user_settings' %}active{% endif %}">
+            <a href="{% url 'user_settings:settings' %}" class="nav-link {% if request.resolver_match.app_name == 'user_settings' or request.resolver_match.app_name == 'change_password' %}active{% endif %}">
                 <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span>Settings</span>
             </a>
         </nav>
 
         <div class="header-user">
-            <a href="{% url 'notifications:list' %}" id="notifBell" class="icon-btn bell {% if request.resolver_match.app_name == 'notifications' %}is-active{% endif %}"
-               data-poll-url="{% url 'notifications:poll' %}" title="Notifications" aria-label="Notifications">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span class="bell-badge" id="notifBadge" hidden>0</span>
-            </a>
-            <div class="avatar">{{ user.email|first|upper }}</div>
-            <div class="who">
-                <strong>{{ user.email }}</strong>
-                <small>{{ user.get_role_display }}</small>
+            <button type="button" class="icon-btn theme-toggle-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode"
+                    data-url="{% if user.is_authenticated %}{% url 'user_settings:theme' %}{% endif %}" data-csrf="{{ csrf_token }}">
+                <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+            </button>
+            <div class="notif-wrap" id="notifWrap">
+                <button type="button" id="notifBell"
+                        class="icon-btn bell {% if request.resolver_match.app_name == 'notifications' %}is-active{% endif %}"
+                        data-poll-url="{% url 'notifications:poll' %}"
+                        data-recent-url="{% url 'notifications:recent' %}"
+                        data-notif-url="{% url 'notifications:list' %}"
+                        data-read-all-url="{% url 'notifications:read_all' %}"
+                        data-csrf="{{ csrf_token }}"
+                        title="Notifications" aria-label="Notifications"
+                        aria-haspopup="true" aria-expanded="false">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span class="bell-badge" id="notifBadge" hidden>0</span>
+                </button>
+                <div class="notif-panel" id="notifPanel" hidden>
+                    <div class="notif-panel-head">
+                        <strong class="notif-panel-title">Notifications</strong>
+                        <button type="button" class="btn btn-ghost btn-sm" id="notifMarkAllBtn" hidden>Mark all read</button>
+                    </div>
+                    <ul class="notif-panel-list" id="notifPanelList">
+                        <li class="notif-panel-empty" id="notifPanelEmpty">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span>No recent notifications</span>
+                        </li>
+                    </ul>
+                    <div class="notif-panel-foot">
+                        <a href="{% url 'notifications:list' %}" class="notif-see-all">See all notifications &rarr;</a>
+                    </div>
+                </div>
             </div>
+            <a href="{% url 'profiles:profile' %}" class="user-chip {% if request.resolver_match.app_name == 'profiles' %}is-active{% endif %}" title="View profile">
+                <div class="avatar">{{ user.email|first|upper }}</div>
+                <div class="who">
+                    <strong>{{ user.email }}</strong>
+                    <small>{{ user.get_role_display }}</small>
+                </div>
+            </a>
             <a href="{% url 'login:logout' %}" class="icon-btn icon-btn--danger" title="Log out" aria-label="Log out">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </a>
         </div>
         {% else %}
         <div class="header-links">
+            <button type="button" class="icon-btn theme-toggle-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+            </button>
             <a href="{% url 'login:login' %}" class="btn btn-ghost btn-sm">Sign In</a>
             <a href="{% url 'register:register' %}" class="btn btn-primary btn-sm">Get Started</a>
         </div>
@@ -90,11 +127,6 @@
 
     {% block content %}{% endblock %}
         {% if user.is_authenticated %}<div class="live-toasts" id="liveToasts" aria-live="polite"></div>{% endif %}
-    <button type="button" class="theme-fab" id="themeToggle" aria-label="Toggle dark mode"
-            data-url="{% if user.is_authenticated %}{% url 'user_settings:theme' %}{% endif %}" data-csrf="{{ csrf_token }}">
-        <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
-    </button>
 
     <script>
         (function () {
@@ -132,7 +164,11 @@
             }
         })();
     </script>
-        {% if user.is_authenticated %}<script src="{% static 'js/notifications/notifications.js' %}?v={% now 'U' %}"></script>{% endif %}
+    <!-- Anime.js Core Engine & Global Screen Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <script src="{% static 'js/shadergradient.js' %}?v={% now 'U' %}"></script>
+    <script src="{% static 'js/animations.js' %}?v={% now 'U' %}"></script>
+    {% if user.is_authenticated %}<script src="{% static 'js/notifications/notifications.js' %}?v={% now 'U' %}"></script>{% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -5,6 +5,8 @@ from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
+from apps.register.forms import RegisterForm
+
 
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -29,14 +31,28 @@ class LoginScreen(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect("home:home")
-        return render(request, "login/login.html", {"form": LoginForm(), "next": safe_next(request)})
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        return render(request, "login/login.html", {
+            "form": login_form,
+            "login_form": login_form,
+            "register_form": register_form,
+            "mode": "login",
+            "next": safe_next(request),
+        })
 
     def post(self, request):
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
             return redirect(safe_next(request) or "home:home")
-        return render(request, "login/login.html", {"form": form, "next": safe_next(request)})
+        return render(request, "login/login.html", {
+            "form": form,
+            "login_form": form,
+            "register_form": RegisterForm(),
+            "mode": "login",
+            "next": safe_next(request),
+        })
 
 
 class LogoutScreen(View):

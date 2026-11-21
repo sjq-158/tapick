@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views import View
 
+from apps.login.views import LoginForm
 from .forms import RegisterForm
 
 
@@ -9,7 +10,14 @@ class RegisterScreen(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect("home:home")
-        return render(request, "register/register.html", {"form": RegisterForm()})
+        login_form = LoginForm()
+        register_form = RegisterForm()
+        return render(request, "register/register.html", {
+            "form": register_form,
+            "register_form": register_form,
+            "login_form": login_form,
+            "mode": "register",
+        })
 
     def post(self, request):
         form = RegisterForm(request.POST)
@@ -17,7 +25,12 @@ class RegisterScreen(View):
             form.save()
             messages.success(request, "Account created. You can sign in now.")
             return redirect("login:login")
-        return render(request, "register/register.html", {"form": form})
+        return render(request, "register/register.html", {
+            "form": form,
+            "register_form": form,
+            "login_form": LoginForm(),
+            "mode": "register",
+        })
 
 # # from django.shortcuts import render
 

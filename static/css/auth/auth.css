@@ -1,0 +1,665 @@
+/* ==========================================================================
+   Tapick Split-Screen Sliding Auth System (Login & Register)
+   Featuring:
+   - Sliding transition between Login & Register (desktop slide & mobile tabs)
+   - Soft pastel squircle icon tiles with dark charcoal line stroke (Ref: 435f08b7)
+   - Luminous circular avatar badge with white halo & dual-tone glyph (Ref: c70815a5)
+   - Full dark mode & reduced motion support
+   ========================================================================== */
+
+/* ── Page Wrapper ────────────────────────────────────────────────────────── */
+.auth-page-wrap {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 104px 20px 48px;
+    box-sizing: border-box;
+}
+
+/* ── The Sliding Card Container ──────────────────────────────────────────── */
+.auth-slider-card {
+    position: relative;
+    width: 100%;
+    max-width: 1040px;
+    min-height: 640px;
+    background: var(--surface);
+    border-radius: 28px;
+    border: 1px solid var(--glass-line);
+    box-shadow: 0 24px 64px -16px rgba(19, 21, 21, 0.22),
+                0 0 0 1px rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    margin: 0 auto;
+}
+
+[data-theme="dark"] .auth-slider-card {
+    box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.65),
+                0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ── Two Form Panes Base Grid ────────────────────────────────────────────── */
+.auth-forms-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 640px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.auth-slide-pane {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 38px 40px;
+    box-sizing: border-box;
+    transition: opacity 0.5s ease, transform 0.65s cubic-bezier(0.77, 0, 0.175, 1);
+    z-index: 2;
+}
+
+/* Login Pane occupies Left Half (0 - 50%) */
+.auth-slide-pane.is-login-pane {
+    grid-column: 1;
+}
+
+/* Register Pane occupies Right Half (50% - 100%) */
+.auth-slide-pane.is-register-pane {
+    grid-column: 2;
+}
+
+/* Active & Inactive Form Visibility */
+.auth-slider-card.mode-login .is-login-pane {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+.auth-slider-card.mode-login .is-register-pane {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(40px);
+}
+
+.auth-slider-card.mode-register .is-register-pane {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+.auth-slider-card.mode-register .is-login-pane {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-40px);
+}
+
+/* ── Sliding Colored Overlay Panel ───────────────────────────────────────── */
+.auth-sliding-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 10;
+    background: linear-gradient(140deg, #1f5f56 0%, #339989 42%, #5BC0BE 82%, #7DE2D1 100%);
+    border-radius: 28px;
+    box-shadow: 0 16px 48px rgba(19, 21, 21, 0.28);
+    transition: transform 0.75s cubic-bezier(0.77, 0, 0.175, 1);
+    overflow: hidden;
+    color: #FFFFFF;
+    will-change: transform;
+}
+
+[data-theme="dark"] .auth-sliding-overlay {
+    background: linear-gradient(140deg, #131515 0%, #1a3834 45%, #276257 85%, #339989 100%);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Position in Login Mode: On the RIGHT (0.5 to 1.0) */
+.auth-slider-card.mode-login .auth-sliding-overlay {
+    transform: translateX(100%);
+}
+
+/* Position in Register Mode: On the LEFT (0 to 0.5) */
+.auth-slider-card.mode-register .auth-sliding-overlay {
+    transform: translateX(0%);
+}
+
+/* Ambient glow blobs inside sliding overlay */
+.auth-sliding-overlay::before {
+    content: "";
+    position: absolute;
+    top: -30%;
+    left: -20%;
+    width: 140%;
+    height: 160%;
+    background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.24), transparent 55%),
+                radial-gradient(circle at 75% 75%, rgba(51, 153, 137, 0.35), transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ── Brand Content Panels Inside Overlay ─────────────────────────────────── */
+.overlay-brand-pane {
+    position: absolute;
+    inset: 0;
+    padding: 44px 38px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    z-index: 3;
+    transition: opacity 0.5s ease, transform 0.65s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.auth-slider-card.mode-login .overlay-brand-pane.is-for-login {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+.auth-slider-card.mode-login .overlay-brand-pane.is-for-register {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(60px);
+}
+
+.auth-slider-card.mode-register .overlay-brand-pane.is-for-register {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+.auth-slider-card.mode-register .overlay-brand-pane.is-for-login {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-60px);
+}
+
+.auth-brand-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.auth-kicker {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.auth-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.85rem, 2.8vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.auth-heading .outline {
+    color: #A6E7D1;
+    -webkit-text-stroke: 1.5px #131515;
+    paint-order: stroke fill;
+}
+
+[data-theme="dark"] .auth-heading .outline {
+    color: #7DE2D1;
+    -webkit-text-stroke: 1.5px #0a0b0b;
+}
+
+.auth-desc {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 0;
+}
+
+/* ── Organic Wave Divider Edge on the Overlay ────────────────────────────── */
+.auth-wave-decor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 48px;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+    transition: left 0.4s, right 0.4s, transform 0.4s;
+}
+
+/* When overlay is on the RIGHT (Login mode), wave decor sits on the left edge */
+.auth-slider-card.mode-login .auth-wave-decor {
+    left: -24px;
+    right: auto;
+    transform: scaleX(-1);
+    color: #1f5f56;
+}
+
+/* When overlay is on the LEFT (Register mode), wave decor sits on the right edge */
+.auth-slider-card.mode-register .auth-wave-decor {
+    left: auto;
+    right: -24px;
+    transform: none;
+    color: #6edecf;
+}
+
+[data-theme="dark"] .auth-slider-card.mode-login .auth-wave-decor { color: #131515; }
+[data-theme="dark"] .auth-slider-card.mode-register .auth-wave-decor { color: #339989; }
+
+.auth-wave-decor svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+/* ── Soft Tinted Squircle Icon Tiles (Ref: 435f08b7) ─────────────────────── */
+/* Instead of solid flat white icons, this uses a soft pastel mint/ice tile
+   with dark wireframe outline strokes, giving subtle depth & tactile softness */
+.icon-tile-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #E8F9F8;
+    border: 1px solid rgba(166, 231, 209, 0.75);
+    box-shadow: 0 4px 12px rgba(91, 192, 190, 0.16);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.icon-tile-badge svg {
+    width: 22px;
+    height: 22px;
+    stroke: #2B2C28;
+    stroke-width: 2.3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+[data-theme="dark"] .icon-tile-badge {
+    background: rgba(51, 153, 137, 0.24);
+    border-color: rgba(125, 226, 209, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .icon-tile-badge svg {
+    stroke: #7DE2D1;
+}
+
+/* Feature bullet items inside overlay */
+.auth-features {
+    display: grid;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.auth-feat-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+    font-size: 0.86rem;
+    color: #FFFFFF;
+}
+
+.auth-feat-item strong {
+    display: block;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    color: #FFFFFF;
+}
+
+.auth-feat-item span {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* Slide action pill button inside overlay */
+.overlay-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #2B2C28;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+    transition: transform 0.2s var(--ease), background 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.overlay-action-btn:hover {
+    transform: translateY(-2px);
+    background: #FFFFFF;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .overlay-action-btn {
+    background: #7DE2D1;
+    color: #131515;
+}
+
+/* ── Luminous Avatar Badge with White Ring & Dual-Tone (Ref: c70815a5) ──── */
+.auth-avatar-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 28%, #5BC0BE 0%, #339989 65%, #1e5a52 100%);
+    border: 4.5px solid #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(166, 231, 209, 0.65),
+                0 10px 26px rgba(51, 153, 137, 0.35);
+    display: grid;
+    place-items: center;
+    margin: 0 auto 16px;
+    position: relative;
+    overflow: visible;
+}
+
+[data-theme="dark"] .auth-avatar-badge {
+    background: radial-gradient(circle at 50% 28%, #339989 0%, #1f4d45 65%, #131515 100%);
+    border: 4.5px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(125, 226, 209, 0.45),
+                0 10px 26px rgba(0, 0, 0, 0.55);
+}
+
+.auth-avatar-svg {
+    width: 46px;
+    height: 46px;
+}
+
+/* Dual-tone avatar glyph (black core + white outline) matching Ref: c70815a5 */
+.auth-avatar-svg .avatar-head {
+    fill: #131515;
+    stroke: #FFFFFF;
+    stroke-width: 2.3;
+}
+
+.auth-avatar-svg .avatar-body {
+    fill: #131515;
+    stroke: #FFFFFF;
+    stroke-width: 2.3;
+    stroke-linecap: round;
+}
+
+/* ── Form Inner Layout ───────────────────────────────────────────────────── */
+.auth-form-inner {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.is-register-pane .auth-form-inner {
+    max-width: 450px;
+}
+
+.auth-form-head {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-form-head h1 {
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.auth-form-head p {
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+/* ── Input Wrappers with Soft Pastel Squircle Tile ────────────────────────── */
+.auth-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(62, 76, 95, 0.05);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+[data-theme="dark"] .auth-input-wrapper {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: rgba(190, 238, 230, 0.16);
+}
+
+.auth-input-wrapper:focus-within {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Soft squircle tile icon badge inside input (Ref: 435f08b7) */
+.auth-input-tile {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #E8F9F8;
+    display: grid;
+    place-items: center;
+    margin-left: 8px;
+    flex-shrink: 0;
+    border: 1px solid rgba(166, 231, 209, 0.55);
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.auth-input-tile svg {
+    width: 17px;
+    height: 17px;
+    stroke: #2B2C28;
+    stroke-width: 2.2;
+    fill: none;
+}
+
+[data-theme="dark"] .auth-input-tile {
+    background: rgba(51, 153, 137, 0.25);
+    border-color: rgba(125, 226, 209, 0.35);
+}
+
+[data-theme="dark"] .auth-input-tile svg {
+    stroke: #7DE2D1;
+}
+
+.auth-input-wrapper:focus-within .auth-input-tile {
+    background: rgba(125, 226, 209, 0.45);
+    border-color: #339989;
+    transform: scale(1.04);
+}
+
+.auth-input-wrapper input,
+.auth-input-wrapper select {
+    flex: 1;
+    min-width: 0;
+    background: transparent !important;
+    border: none !important;
+    padding: 11px 13px !important;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--text);
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.auth-input-wrapper input::placeholder {
+    color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+.auth-input-wrapper .toggle-password {
+    position: static;
+    transform: none;
+    margin-right: 8px;
+}
+
+.field-group {
+    margin-bottom: 13px;
+}
+
+.field-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+    color: var(--text);
+}
+
+/* ── High-Contrast Primary Submit Button ──────────────────────────────────── */
+.btn-auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 24px;
+    margin-top: 12px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.2s var(--ease), background 0.2s, box-shadow 0.2s;
+
+    /* Light mode: dark charcoal pill with crisp white text */
+    background: var(--slate-deep, #3E4C5F);
+    color: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(62, 76, 95, 0.28);
+}
+
+.btn-auth-submit:hover {
+    transform: translateY(-2px);
+    background: #2B2C28;
+    box-shadow: 0 10px 26px rgba(43, 44, 40, 0.35);
+}
+
+.btn-auth-submit svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    transition: transform 0.2s;
+}
+
+.btn-auth-submit:hover svg {
+    transform: translateX(3px);
+}
+
+/* Dark mode button: vibrant aqua/teal pill with dark charcoal text */
+[data-theme="dark"] .btn-auth-submit {
+    background: #7DE2D1;
+    color: #131515;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .btn-auth-submit:hover {
+    background: #BEEEE6;
+    color: #131515;
+    box-shadow: 0 10px 28px rgba(125, 226, 209, 0.4);
+}
+
+/* Switch links */
+.auth-switch-link {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 0.86rem;
+    color: var(--muted);
+}
+
+.auth-switch-link button.text-trigger,
+.auth-switch-link a {
+    color: var(--accent-text, #339989);
+    font-weight: 700;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.auth-switch-link button.text-trigger:hover,
+.auth-switch-link a:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+[data-theme="dark"] .auth-switch-link button.text-trigger,
+[data-theme="dark"] .auth-switch-link a {
+    color: #7DE2D1;
+}
+
+/* ── Mobile & Narrow Screens (Collapse overlay to tabs) ───────────────────── */
+@media (max-width: 880px) {
+    .auth-page-wrap {
+        padding: 86px 14px 32px;
+    }
+
+    .auth-slider-card {
+        max-width: 520px;
+        min-height: auto;
+    }
+
+    .auth-sliding-overlay {
+        display: none; /* Hide sliding panel on small screens and use smooth tab switcher */
+    }
+
+    .auth-forms-container {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .auth-slide-pane {
+        padding: 32px 24px;
+    }
+
+    .auth-slide-pane.is-register-pane {
+        grid-column: 1;
+    }
+
+    .auth-slider-card.mode-login .is-login-pane {
+        display: flex;
+    }
+    .auth-slider-card.mode-login .is-register-pane {
+        display: none;
+    }
+
+    .auth-slider-card.mode-register .is-register-pane {
+        display: flex;
+    }
+    .auth-slider-card.mode-register .is-login-pane {
+        display: none;
+    }
+}

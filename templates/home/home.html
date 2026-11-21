@@ -173,13 +173,16 @@
         <article class="card">
             <div class="card-head">
                 <h2>Notifications</h2>
-                {% if unread_count %}
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="mark_read">
-                    <button type="submit" class="btn btn-ghost btn-sm">Mark all read</button>
-                </form>
-                {% endif %}
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    {% if unread_count %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_read">
+                        <button type="submit" class="btn btn-ghost btn-sm">Mark all read</button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-sm">Full history &rarr;</a>
+                </div>
             </div>
             {% if notifications %}
             <ul class="feed">
@@ -194,11 +197,17 @@
                 </li>
                 {% endfor %}
             </ul>
+            <div style="text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);">
+                <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-sm" style="width: 100%; justify-content: center;">See all notifications &rarr;</a>
+            </div>
             {% else %}
             <div class="empty">
                 <svg class="icon-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                 <h3>You're all caught up</h3>
                 <p>Stock alerts sent to you will show up here.</p>
+                <div style="margin-top: 12px;">
+                    <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-sm">View full history &rarr;</a>
+                </div>
             </div>
             {% endif %}
         </article>

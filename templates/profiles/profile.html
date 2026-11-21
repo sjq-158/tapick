@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}My Profile — Tapick{% endblock %}
 
@@ -6,53 +7,112 @@
 <main class="page page--narrow">
     <header class="page-head">
         <div>
-            <p class="kicker">Account</p>
-            <h1>My profile</h1>
-            <p class="muted">Keep your details up to date.</p>
+            <p class="kicker">Employee Profile</p>
+            <h1>Profile details</h1>
+            <p class="muted">Official organization credentials, branch assignment, and access authorization.</p>
         </div>
     </header>
 
     <div class="grid-aside">
+        <!-- Identity Summary Card -->
         <aside class="card profile-card">
             <div class="avatar avatar--lg">{{ initials }}</div>
             <h2>{{ display_name }}</h2>
             <span class="badge badge--ok">{{ user.get_role_display }}</span>
             <dl class="details">
-                <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
-                <div><dt>Branch</dt><dd>{{ user.branch|default:"Not assigned" }}</dd></div>
-                <div><dt>Company</dt><dd>{{ user.company|default:"Not assigned" }}</dd></div>
-                <div><dt>Member since</dt><dd>{{ user.created_at|date:"F j, Y" }}</dd></div>
+                <div>
+                    <dt>Status</dt>
+                    <dd><span class="badge badge--ok" style="font-size: 0.72rem;">Active &amp; Verified</span></dd>
+                </div>
+                <div>
+                    <dt>Company</dt>
+                    <dd>{{ user_company.company_name|default:"Independent" }}</dd>
+                </div>
+                <div>
+                    <dt>Assigned Branch</dt>
+                    <dd>{{ user_branch.branch_name|default:"Company HQ" }}</dd>
+                </div>
+                <div>
+                    <dt>Member since</dt>
+                    <dd>{{ user.created_at|date:"M j, Y" }}</dd>
+                </div>
             </dl>
         </aside>
 
-        <section class="card">
-            <div class="card-head"><h2>Personal details</h2></div>
-            <form method="post" class="form-grid">
-                {% csrf_token %}
-                <div class="field-group half">
-                    <label for="first_name">First name</label>
-                    <input type="text" name="first_name" id="first_name" value="{{ profile.first_name }}" maxlength="255" required>
+        <!-- Profile Details Display Section (Read-Only) -->
+        <div style="display: grid; gap: 20px;">
+            <!-- Account & Contact Information Card -->
+            <section class="card">
+                <div class="card-head">
+                    <h2>Account &amp; Contact Details</h2>
                 </div>
-                <div class="field-group half">
-                    <label for="last_name">Last name</label>
-                    <input type="text" name="last_name" id="last_name" value="{{ profile.last_name }}" maxlength="255" required>
+                <dl class="details">
+                    <div>
+                        <dt>Full Name</dt>
+                        <dd><strong>{{ display_name }}</strong></dd>
+                    </div>
+                    <div>
+                        <dt>Official Email</dt>
+                        <dd><code>{{ user.email }}</code></dd>
+                    </div>
+                    <div>
+                        <dt>Contact Number</dt>
+                        <dd>{{ phone }}</dd>
+                    </div>
+                    <div>
+                        <dt>Professional License</dt>
+                        <dd>{{ license_number }}</dd>
+                    </div>
+                    <div>
+                        <dt>Account Role</dt>
+                        <dd><strong>{{ user.get_role_display }}</strong></dd>
+                    </div>
+                </dl>
+            </section>
+
+            <!-- Branch & Location Card -->
+            <section class="card">
+                <div class="card-head">
+                    <h2>Branch &amp; Workplace Assignment</h2>
                 </div>
-                <div class="field-group half">
-                    <label for="phone">Phone</label>
-                    <input type="text" name="phone" id="phone" value="{{ phone }}" maxlength="20" placeholder="+63 900 000 0000">
+                <dl class="details">
+                    <div>
+                        <dt>Branch Name</dt>
+                        <dd><strong>{{ user_branch.branch_name|default:"All Branches (HQ)" }}</strong></dd>
+                    </div>
+                    <div>
+                        <dt>Address</dt>
+                        <dd>{{ user_branch.street_address|default:"Central Headquarters" }}, {{ user_branch.city|default:"Cebu City" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Province &amp; Postal</dt>
+                        <dd>{{ user_branch.province|default:"Cebu" }} {{ user_branch.postal_code|default:"" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Branch Phone</dt>
+                        <dd>{{ user_branch.branch_phone|default:"N/A" }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <!-- Role Scope & Responsibilities Card -->
+            <section class="card">
+                <div class="card-head">
+                    <h2>{{ role_info.title }} Scope</h2>
                 </div>
-                {% if has_license %}
-                <div class="field-group half">
-                    <label for="license_number">License number</label>
-                    <input type="text" name="license_number" id="license_number" value="{{ profile.license_number }}" maxlength="100" placeholder="PRC-0000000">
+                <p class="muted" style="font-size: 0.88rem; line-height: 1.45; margin-bottom: 14px;">
+                    {{ role_info.description }}
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                    {% for perm in role_info.permissions %}
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; background: var(--surface-2); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <svg class="icon-sm" viewBox="0 0 24 24" style="color: var(--accent);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>{{ perm }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endif %}
-                <button type="submit" class="btn btn-primary btn-block">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    Save changes
-                </button>
-            </form>
-        </section>
+            </section>
+        </div>
     </div>
 </main>
 {% endblock %}

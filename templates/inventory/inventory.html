@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Inventory — Tapick{% endblock %}
+{% block title %}Inventory & Cross-Branch Locator — Tapick{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="{% static 'css/inventory/inventory.css' %}?v={% now 'U' %}">
 {% endblock %}
 
@@ -11,40 +12,108 @@
 <main class="page">
     <header class="page-head">
         <div>
-            <p class="kicker">Inventory</p>
             <h1>Inventory management</h1>
-            <p class="muted">{{ scope_label }} &middot; stock levels update for everyone as soon as you save.</p>
+            <p class="muted">
+                {{ scope_label }} &middot;
+                <span class="live-pill is-live" id="invLivePill" title="Stock levels reflected system-wide within 5 seconds">
+                    <span class="live-dot"></span>
+                    <span id="invLiveText">Live Sync (5s)</span>
+                </span>
+            </p>
         </div>
         <div class="page-actions">
+            <!-- Notify Branch Button -->
+            <button type="button" class="btn btn-ghost" data-open="notifyBranchDialog" title="Send a stock alert or notification to another branch">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span>Notify branch</span>
+            </button>
+
+            <!-- Export Dropdown -->
+            <div class="dropdown-wrap" id="exportDropdownWrap">
+                <button type="button" class="btn btn-ghost" id="exportDropdownBtn" aria-haspopup="true" aria-expanded="false">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Export</span>
+                    <svg class="icon-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="dropdown-menu" id="exportDropdownMenu" hidden>
+                    <a href="{% url 'inventory:export_csv' %}{% if querystring %}?{{ querystring }}{% endif %}" class="dropdown-item">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        <div>
+                            <strong>Export as CSV</strong>
+                            <small>Full spreadsheet with metrics & calculations</small>
+                        </div>
+                    </a>
+                    <a href="{% url 'inventory:export_pdf' %}{% if querystring %}?{{ querystring }}{% endif %}" class="dropdown-item" target="_blank">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <div>
+                            <strong>Export as PDF</strong>
+                            <small>Formatted executive summary report</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Upload File -->
+            <button type="button" class="btn btn-ghost" data-open="uploadDialog" title="Upload CSV, TSV, or JSON file to update inventory">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Upload file</span>
+            </button>
+
             {% if can_manage_catalogue %}
-            <button type="button" class="btn btn-ghost" data-open="medicineDialog">New medicine</button>
+            <button type="button" class="btn btn-ghost" data-open="medicineDialog">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>New medicine</span>
+            </button>
             {% endif %}
             <button type="button" class="btn btn-primary" data-open="addDialog">
                 <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Add stock record
+                <span>Add stock record</span>
             </button>
         </div>
     </header>
 
-    <section class="stat-grid stat-grid--4" aria-label="Stock summary">
-        <article class="stat-card">
-            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
-            <div><p class="stat-label">Tracked</p><p class="stat-value">{{ counts.total }}</p></div>
-        </article>
-        <article class="stat-card">
-            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-            <div><p class="stat-label">Healthy</p><p class="stat-value">{{ counts.ok }}</p></div>
-        </article>
-        <article class="stat-card stat-card--warn">
-            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-            <div><p class="stat-label">Low stock</p><p class="stat-value">{{ counts.low }}</p></div>
-        </article>
-        <article class="stat-card stat-card--danger">
-            <div class="stat-icon"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
-            <div><p class="stat-label">Out of stock</p><p class="stat-value">{{ counts.out }}</p></div>
-        </article>
+    <!-- Cross-Branch Stock Locator Map Section -->
+    <section class="card map-card">
+        <div class="card-head">
+            <div>
+                <p class="kicker">Cross-Branch Stock Locator</p>
+                <h2>Interactive Branch Map & Distance Locator</h2>
+                <p class="muted">Check availability across all company branches, find nearest stock, and calculate travel distance.</p>
+            </div>
+        </div>
+
+        <!-- Clean, Non-wrapping Top Search Toolbar Above Map -->
+        <div class="map-search-toolbar">
+            <div class="map-search-field">
+                <svg class="icon-sm map-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Search medicine to locate nearest branch (e.g. Paracetamol, Amoxicillin)..." autocomplete="off">
+                <div class="map-search-actions">
+                    <button type="button" class="btn btn-primary btn-sm" id="mapSearchBtn">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>Locate</span>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="mapResetBtn" title="Reset map zoom to show all branches">
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="locatorMap" class="locator-map" data-branches="{{ branches_json }}" data-locate-url="{% url 'inventory:locate' %}"></div>
+
+        <div class="map-footer">
+            <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot legend-dot--mine"></span> Your Branch</span>
+                <span class="legend-item"><span class="legend-dot legend-dot--other"></span> Other Branches</span>
+                <span class="legend-item"><span class="legend-dot legend-dot--nearest"></span> Nearest In-Stock Branch</span>
+            </div>
+            <small class="muted" id="mapStatusText">Showing all {{ branches|length }} branch locations</small>
+        </div>
+
+        <div id="locatorResultCard" class="locator-results" hidden></div>
     </section>
 
+    <!-- Filter Form -->
     <section class="card">
         <form method="get" class="inv-filters">
             <div class="field-group">
@@ -78,6 +147,7 @@
         </form>
     </section>
 
+    <!-- Inventory Table -->
     <section class="card">
         {% if rows %}
         <div class="table-wrap">
@@ -90,24 +160,23 @@
                         <th class="num">Reorder at</th>
                         <th>Status</th>
                         <th class="num">Price</th>
+                        <th>Cross-Branch Stock</th>
                         <th>Updated</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in rows %}
-                    <tr>
+                    <tr class="inv-row {% if row.status == 'out' %}row--out{% elif row.status == 'low' %}row--low{% endif %}" data-row-id="{{ row.pk }}">
                         <td>
                             <strong>{{ row.medicine.medicine_name }}</strong>
-                            <small>{{ row.medicine.generic_name }} &middot; {{ row.medicine.category }}{% if row.medicine.requires_prescription %} &middot; Rx{% endif %}</small>
-                            {% if row.status != 'ok' and row.elsewhere %}
-                            <span class="elsewhere">In stock at: {% for o in row.elsewhere|slice:":3" %}{{ o.branch.branch_name }} ({{ o.quantity_on_hand }}){% if not forloop.last %}, {% endif %}{% endfor %}</span>
-                            {% elif row.status != 'ok' %}
-                            <span class="elsewhere elsewhere--none">No other branch has stock</span>
-                            {% endif %}
+                            <small>{{ row.medicine.generic_name }} &middot; {{ row.medicine.category }}</small>
                         </td>
                         {% if scope_count > 1 %}<td>{{ row.branch.branch_name }}</td>{% endif %}
-                        <td class="num">{{ row.quantity_on_hand }} <small>{{ row.medicine.unit_of_measure }}</small></td>
+                        <td class="num">
+                            <strong>{{ row.quantity_on_hand }}</strong>
+                            <small>{{ row.medicine.unit_of_measure }}</small>
+                        </td>
                         <td class="num">{{ row.reorder_threshold }}</td>
                         <td>
                             {% if row.status == 'out' %}<span class="badge badge--danger">Out of stock</span>
@@ -115,23 +184,57 @@
                             {% else %}<span class="badge badge--ok">Healthy</span>{% endif %}
                         </td>
                         <td class="num">&#8369;{{ row.medicine.unit_price|floatformat:"2g" }}</td>
-                        <td><small>{{ row.last_updated|timesince }} ago</small></td>
                         <td>
-                            <div class="row-actions">
-                                {% if row.status != 'ok' and row.elsewhere %}
-                                <form method="post" action="{% url 'inventory:request_stock' row.inventory_id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-ghost btn-sm">Request stock</button>
-                                </form>
+                            {% if row.status != 'ok' %}
+                                {% if row.nearest_branch %}
+                                <div class="nearest-stock-badge">
+                                    <span class="nearest-stock-text">
+                                        📍 <strong>{{ row.nearest_branch.branch_name }}</strong>: {{ row.nearest_qty }} on hand (<strong>{{ row.nearest_distance }} km</strong> away)
+                                    </span>
+                                    <div class="nearest-stock-actions">
+                                        <button type="button" class="btn-locate-link"
+                                                data-focus-branch="{{ row.nearest_branch.branch_name }}"
+                                                data-lat="{{ row.nearest_branch.coordinates.0 }}"
+                                                data-lng="{{ row.nearest_branch.coordinates.1 }}"
+                                                data-med="{{ row.medicine.medicine_name }}"
+                                                data-qty="{{ row.nearest_qty }}"
+                                                data-dist="{{ row.nearest_distance }}">
+                                            Show on map
+                                        </button>
+                                        &middot;
+                                        <button type="button" class="btn-quick-notify"
+                                                data-branch-id="{{ row.nearest_branch.branch_id }}"
+                                                data-branch-name="{{ row.nearest_branch.branch_name }}"
+                                                data-med-id="{{ row.medicine.medicine_id }}"
+                                                data-med-name="{{ row.medicine.medicine_name }}"
+                                                data-qty="{{ row.reorder_threshold }}">
+                                            Notify
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="muted"><small>No other branch has stock</small></span>
                                 {% endif %}
-                                <button type="button" class="btn btn-primary btn-sm" data-adjust
-                                        data-url="{% url 'inventory:update' row.inventory_id %}"
-                                        data-name="{{ row.medicine.medicine_name }}"
-                                        data-branch="{% if scope_count > 1 %}{{ row.branch.branch_name }}{% endif %}"
-                                        data-qty="{{ row.quantity_on_hand }}"
-                                        data-unit="{{ row.medicine.unit_of_measure }}"
-                                        data-threshold="{{ row.reorder_threshold }}">Update</button>
-                            </div>
+                            {% else %}
+                                <span class="muted"><small>&mdash;</small></span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ row.last_updated|timesince }} ago</small></td>
+                        <td class="table-actions">
+                            <button type="button" class="btn btn-ghost btn-sm"
+                                    data-adjust
+                                    data-url="{% url 'inventory:update' row.pk %}"
+                                    data-name="{{ row.medicine.medicine_name }}"
+                                    data-branch="{% if scope_count > 1 %}{{ row.branch.branch_name }}{% endif %}"
+                                    data-qty="{{ row.quantity_on_hand }}"
+                                    data-unit="{{ row.medicine.unit_of_measure }}"
+                                    data-threshold="{{ row.reorder_threshold }}">Update</button>
+                            {% if row.status != 'ok' %}
+                            <button type="button" class="btn btn-ghost btn-sm btn--warn btn-request-stock"
+                                    data-url="{% url 'inventory:request_stock' row.pk %}"
+                                    data-med-name="{{ row.medicine.medicine_name }}"
+                                    title="Notify nearest branch for stock transfer">Request</button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -146,21 +249,223 @@
             {% if page.has_next %}<a class="btn btn-ghost btn-sm" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
         </nav>
         {% endif %}
+
         {% else %}
         <div class="empty">
             <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
             <h3>{% if q or branch_id or status %}No stock matches these filters{% else %}No stock records yet{% endif %}</h3>
             <p>
                 {% if q or branch_id or status %}Try a different search or reset the filters.
-                {% elif medicines %}Use "Add stock record" to start tracking a medicine.
-                {% elif can_manage_catalogue %}Add a medicine to the catalogue first, then add stock for it.
-                {% elif is_admin %}Add companies, branches and medicines from the admin panel first.
-                {% else %}Ask a head pharmacist to add medicines to the catalogue first.{% endif %}
+                {% elif medicines %}Use "Add stock record" or "Upload file" to start tracking inventory.
+                {% elif can_manage_catalogue %}Add a medicine to the catalogue first, or upload an inventory file to import both medicines and stock automatically.
+                {% elif is_admin %}Add companies, branches and medicines, or upload an inventory file to import data.
+                {% else %}Ask a head pharmacist to add medicines, or upload an inventory file.{% endif %}
             </p>
         </div>
         {% endif %}
     </section>
 </main>
+
+<!-- Cross-Branch Notification Modal Dialog (Step 1) -->
+<dialog class="modal" id="notifyBranchDialog">
+    <form method="post" action="{% url 'inventory:notify_branch' %}" class="modal-card" id="notifyBranchForm">
+        {% csrf_token %}
+        <div class="modal-head">
+            <h2>Send branch notification</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <p class="muted modal-sub">
+            Sends a real-time notification directly to branch pharmacists and head pharmacists.
+        </p>
+
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="notify_target_branch">Target branch <span style="color: var(--danger);">*</span></label>
+                <select name="target_branch_id" id="notify_target_branch" required>
+                    <option value="">Select recipient branch</option>
+                    {% for b in branches %}
+                    <option value="{{ b.branch_id }}">{{ b.branch_name }} ({{ b.city }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group">
+                <label for="notify_medicine">Related medicine (optional)</label>
+                <select name="medicine_id" id="notify_medicine">
+                    <option value="">-- General notification / Any medicine --</option>
+                    {% for m in medicines %}
+                    <option value="{{ m.medicine_id }}">{{ m.medicine_name }} ({{ m.unit_of_measure }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group half">
+                <label for="notify_quantity">Quantity needed (optional)</label>
+                <input type="number" name="quantity" id="notify_quantity" min="1" placeholder="e.g. 50">
+            </div>
+
+            <div class="field-group half">
+                <label for="notify_urgency">Urgency level</label>
+                <select name="urgency" id="notify_urgency">
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+
+            <div class="field-group full">
+                <label for="notify_note">Message / Note</label>
+                <textarea name="note" id="notify_note" rows="3" placeholder="Specify stock transfer request details, patient urgency, or callback instructions..."></textarea>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="button" class="btn btn-primary" id="openNotifyConfirmBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                Continue to confirm
+            </button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Confirmation Dialog Box (Step 2) -->
+<dialog class="modal modal--confirm" id="notifyConfirmDialog">
+    <div class="modal-card confirm-card">
+        <div class="confirm-header">
+            <div class="confirm-icon-circle">
+                <svg class="icon-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <div>
+                <h2>Confirm branch notification</h2>
+                <p class="muted">Please verify the details below before sending</p>
+            </div>
+        </div>
+
+        <p class="confirm-intro">
+            Are you sure you want to send this stock notification to <strong id="confirmBranchTitle">—</strong>?
+        </p>
+
+        <div class="confirm-details-box">
+            <div class="confirm-detail-row">
+                <span class="detail-label">Recipient Branch</span>
+                <span class="detail-value" id="confirmBranchName">—</span>
+            </div>
+            <div class="confirm-detail-row">
+                <span class="detail-label">Recipients</span>
+                <span class="detail-value">Branch Pharmacists &amp; Head Pharmacists</span>
+            </div>
+            <div class="confirm-detail-row" id="confirmMedRow">
+                <span class="detail-label">Medicine</span>
+                <span class="detail-value" id="confirmMedName">—</span>
+            </div>
+            <div class="confirm-detail-row" id="confirmQtyRow">
+                <span class="detail-label">Quantity</span>
+                <span class="detail-value" id="confirmQtyVal">—</span>
+            </div>
+            <div class="confirm-detail-row">
+                <span class="detail-label">Urgency</span>
+                <span class="detail-value"><span class="badge" id="confirmUrgencyBadge">Normal</span></span>
+            </div>
+            <div class="confirm-detail-row" id="confirmNoteRow">
+                <span class="detail-label">Message / Note</span>
+                <span class="detail-value confirm-note" id="confirmNoteVal">—</span>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" id="confirmBackBtn">Back to edit</button>
+            <button type="button" class="btn btn-primary" id="confirmSendFinalBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                Yes, send notification
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Stock Request Confirmation Dialog Box -->
+<dialog class="modal modal--confirm" id="requestConfirmDialog">
+    <div class="modal-card confirm-card">
+        <div class="confirm-header">
+            <div class="confirm-icon-circle confirm-icon-circle--warn">
+                <svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div>
+                <h2>Confirm stock request</h2>
+                <p class="muted">Automated stock transfer notification</p>
+            </div>
+        </div>
+        <p class="confirm-intro">
+            Are you sure you want to request stock for <strong id="requestMedTitle">—</strong> from the nearest branch that has stock on hand?
+        </p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <form method="post" id="stockRequestForm" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" id="confirmStockRequestSubmit">
+                    Yes, send request
+                </button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<!-- Upload Inventory Modal -->
+<dialog class="modal" id="uploadDialog">
+    <form method="post" action="{% url 'inventory:upload' %}" enctype="multipart/form-data" class="modal-card">
+        {% csrf_token %}
+        <div class="modal-head">
+            <h2>Upload inventory file</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <p class="muted modal-sub">
+            Upload a CSV, TSV, or JSON file. Tapick automatically understands column names, adds any new medicines to the catalogue, and updates branch stock levels.
+        </p>
+
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="upload_file">Select file (.csv, .tsv, .txt, .json)</label>
+                <input type="file" name="file" id="upload_file" accept=".csv,.tsv,.txt,.json" required>
+            </div>
+
+            <div class="field-group">
+                <label for="target_branch">Target branch</label>
+                <select name="target_branch" id="target_branch">
+                    <option value="">Auto-detect from file (or use your branch)</option>
+                    {% for b in branches %}
+                    <option value="{{ b.branch_id }}">{{ b.branch_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group">
+                <label for="import_mode">Stock update mode</label>
+                <select name="import_mode" id="import_mode">
+                    <option value="update_or_add">Update existing & add new (Set exact stock)</option>
+                    <option value="increment">Add to current stock (Increment received items)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="upload-guide-card">
+            <p><strong>Recognized columns (case-insensitive):</strong></p>
+            <p class="muted"><small>Medicine Name, Generic Name, Brand Name, Category, Unit, Unit Price, Quantity, Reorder Level, Branch, Prescription Required</small></p>
+            <div style="margin-top: 8px;">
+                <a href="{% url 'inventory:template' %}" class="btn btn-ghost btn-sm" download>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download sample CSV template
+                </a>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Process & Reflect to System
+            </button>
+        </div>
+    </form>
+</dialog>
 
 <dialog class="modal" id="adjustDialog">
     <form method="post" class="modal-card">
@@ -262,5 +567,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{% static 'js/inventory/inventory.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

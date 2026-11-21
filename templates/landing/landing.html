@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="{% static 'css/landing/landing.css' %}?v={% now 'U' %}">
 {% endblock %}
 
+{% block background_canvas %}{% endblock %}
+
 {% block header %}
 <div class="scroll-progress" id="scrollProgress"></div>
 <header class="topbar" id="topbar">
@@ -22,6 +24,10 @@
         <a href="#scope">Scope</a>
     </nav>
     <div class="topbar-actions">
+        <button type="button" class="icon-btn theme-toggle-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        </button>
         <a href="{% url 'login:login' %}" class="link-btn">Sign In</a>
         <a href="{% url 'register:register' %}" class="pill-btn">
             Get Started
@@ -273,5 +279,6 @@
     }
 }
 </script>
+<script type="module" src="{% static 'js/landing/shadergradient-mount.js' %}?v={% now 'U' %}"></script>
 <script type="module" src="{% static 'js/landing/landing.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

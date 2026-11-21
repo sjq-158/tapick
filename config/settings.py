@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.user_settings",
     "apps.inventory",
     "apps.notifications",
+    "apps.change_password",
 ]
 
 MIDDLEWARE = [

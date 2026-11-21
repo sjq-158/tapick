@@ -5,7 +5,7 @@ from django.core.mail import send_mass_mail
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.home.models import Inventory, Notification
+from apps.home.models import Inventory, Medicine, Notification
 from apps.user_settings.models import UserSettings
 
 OUT, LOW, OK = "out", "low", "ok"
@@ -150,3 +150,59 @@ def send_stock_request(inventory, requester):
         for user in staff
     ])
     return "sent", len(staff)
+
+
+def send_custom_branch_notification(target_branch, sender_user, medicine=None, quantity=None, note="", urgency="normal"):
+    """
+    Sends a targeted cross-branch notification directly to all active pharmacists
+    at target_branch and the company head pharmacists.
+    Immediately reflects on the screens and notification feeds of recipient employees.
+    """
+    User = get_user_model()
+    sender_branch = sender_user.branch
+    sender_name = sender_branch.branch_name if sender_branch else "Another branch"
+
+    # Recipients: Head pharmacist(s) of company + all pharmacists assigned to target_branch
+    recipients = list(
+        User.objects.filter(is_active=True, company_id=target_branch.company_id)
+        .filter(Q(branch_id=target_branch.branch_id) | Q(role="head_pharmacist"))
+        .exclude(pk=sender_user.pk)
+        .distinct()
+    )
+
+    if not recipients:
+        return "no_recipients", 0
+
+    urgency_tag = "[URGENT] " if urgency == "urgent" else ""
+    if medicine:
+        unit = getattr(medicine, "unit_of_measure", "units")
+        qty_info = f"Needs {quantity} {unit}." if quantity else "Availability inquiry."
+        title = f"{urgency_tag}Stock Request from {sender_name}: {medicine.medicine_name}"
+        msg = f"{sender_name} requested stock for {target_branch.branch_name}. {qty_info}"
+    else:
+        title = f"{urgency_tag}Branch Notification from {sender_name}"
+        msg = f"{sender_name} sent a notification for {target_branch.branch_name}."
+
+    if note:
+        msg += f" Note: {note}"
+    msg += f" (Sent by {sender_user.email})"
+
+    med_obj = medicine if isinstance(medicine, Medicine) else None
+    if not med_obj:
+        med_obj = Medicine.objects.filter(company_id=target_branch.company_id).first()
+
+    rows = [
+        Notification(
+            branch=target_branch,
+            medicine=med_obj,
+            recipient_user=user,
+            notification_type="stock_request",
+            title=title[:255],
+            message=msg[:255],
+        )
+        for user in recipients
+    ]
+    Notification.objects.bulk_create(rows)
+    email_alerts(recipients, title, msg)
+
+    return "sent", len(recipients)

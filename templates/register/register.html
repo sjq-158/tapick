@@ -1,57 +1,414 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Register — Tapick{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing/landing.css' %}?v={% now 'U' %}">
+<link rel="stylesheet" href="{% static 'css/auth/auth.css' %}?v={% now 'U' %}">
+{% endblock %}
+
+{% block background_canvas %}
+<div class="bg-gradient" id="bgGradient" aria-hidden="true"></div>
+{% endblock %}
+
+{% block header %}
+<header class="topbar" id="topbar">
+    <a href="{% url 'landing:landing' %}" class="brand">
+        <img src="{% static 'images/logo.jpg' %}" alt="Tapick logo" class="brand-logo">
+        <span>Tapick</span>
+    </a>
+    <nav class="topnav">
+        <a href="{% url 'landing:landing' %}#features">Features</a>
+        <a href="{% url 'landing:landing' %}#locator">Stock Locator</a>
+        <a href="{% url 'landing:landing' %}#how">How it works</a>
+        <a href="{% url 'landing:landing' %}#scope">Scope</a>
+    </nav>
+    <div class="topbar-actions">
+        <button type="button" class="icon-btn theme-toggle-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        </button>
+        <a href="{% url 'login:login' %}" class="link-btn" id="topbarSignIn">Sign In</a>
+        <a href="{% url 'register:register' %}" class="pill-btn active" id="topbarGetStarted">
+            Get Started
+            <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+    </div>
+</header>
+{% endblock %}
+
 {% block content %}
-<main class="auth-shell">
-    <section class="auth-main">
-        <div class="auth-card auth-card--wide">
-            <p class="kicker">Create account</p>
-            <h1>Join your branch network</h1>
-            <p class="muted subtitle">Register a pharmacist account for your branch.</p>
+<main class="auth-page-wrap">
+    <!-- Sliding Split Card (Defaults to mode-register) -->
+    <div class="auth-slider-card mode-register" id="authSliderCard">
 
-            <form method="post" class="form-grid" novalidate>
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                <div class="form-error">{{ form.non_field_errors }}</div>
-                {% endif %}
+        <!-- Forms Container -->
+        <div class="auth-forms-container">
 
-                {% for field in form %}
-                <div class="field-group{% if field.name == 'first_name' or field.name == 'last_name' or field.name == 'license_number' or field.name == 'phone' %} half{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {% if field.name == 'password' or field.name == 'confirm_password' %}
-                    <div class="input-wrapper">
-                        {{ field }}
-                        <button type="button" class="toggle-password" data-target="{{ field.id_for_label }}" aria-label="Show or hide password">
-                            <svg class="icon eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            <svg class="icon eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                        </button>
+            <!-- 1. LOGIN PANE (Left Half) -->
+            <section class="auth-slide-pane is-login-pane" id="loginFormPane">
+                <div class="auth-form-inner">
+                    <!-- Ref: c70815a5 Avatar Badge with White Ring & Dual-Tone Glyph -->
+                    <div class="auth-avatar-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" class="auth-avatar-svg">
+                            <circle cx="12" cy="7.2" r="3.6" class="avatar-head"></circle>
+                            <path d="M5.5 21 C5.5 16 8.5 13.8 12 13.8 C15.5 13.8 18.5 16 18.5 21" class="avatar-body"></path>
+                        </svg>
                     </div>
-                    {% else %}
-                    {{ field }}
-                    {% endif %}
-                    {{ field.errors }}
+
+                    <div class="auth-form-head">
+                        <h1>Sign in</h1>
+                        <p>Enter your credentials to access your pharmacy branch.</p>
+                    </div>
+
+                    <form method="post" action="{% url 'login:login' %}" novalidate id="loginForm">
+                        {% csrf_token %}
+                        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                        {% if login_form.non_field_errors %}
+                        <div class="form-error">{{ login_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        {% for field in login_form %}
+                        <div class="field-group">
+                            <label for="login_{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="auth-input-wrapper">
+                                <!-- Ref: 435f08b7 Soft Pastel Squircle Tile -->
+                                <div class="auth-input-tile" aria-hidden="true">
+                                    {% if field.name == 'username' %}
+                                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    {% elif field.name == 'password' %}
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    {% else %}
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>
+                                    {% endif %}
+                                </div>
+                                {{ field }}
+                                {% if field.name == 'password' %}
+                                <button type="button" class="toggle-password" data-target="{{ field.id_for_label }}" aria-label="Show or hide password">
+                                    <svg class="icon eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <svg class="icon eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {{ field.errors }}
+                        </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary btn-auth-submit">
+                            <span>Sign in</span>
+                            <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </form>
+
+                    <p class="auth-switch-link">
+                        No account yet? <button type="button" class="text-trigger" id="switchRegisterBtn">Create account here &rarr;</button>
+                    </p>
                 </div>
-                {% endfor %}
+            </section>
 
-                <button type="submit" class="btn btn-primary btn-block">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    Create account
-                </button>
-            </form>
+            <!-- 2. REGISTER PANE (Right Half) -->
+            <section class="auth-slide-pane is-register-pane" id="registerFormPane">
+                <div class="auth-form-inner">
+                    <!-- Ref: c70815a5 Avatar Badge with White Ring & Dual-Tone Glyph -->
+                    <div class="auth-avatar-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" class="auth-avatar-svg">
+                            <circle cx="12" cy="7.2" r="3.6" class="avatar-head"></circle>
+                            <path d="M5.5 21 C5.5 16 8.5 13.8 12 13.8 C15.5 13.8 18.5 16 18.5 21" class="avatar-body"></path>
+                        </svg>
+                    </div>
 
-            <p class="auth-footer">Already registered? <a href="{% url 'login:login' %}">Sign in here</a></p>
+                    <div class="auth-form-head">
+                        <h1>Create account</h1>
+                        <p>Register a pharmacist account for your branch network.</p>
+                    </div>
+
+                    <form method="post" action="{% url 'register:register' %}" class="form-grid" novalidate id="registerForm">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                        <div class="form-error">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        {% for field in register_form %}
+                        <div class="field-group{% if field.name == 'first_name' or field.name == 'last_name' or field.name == 'license_number' or field.name == 'phone' %} half{% endif %}">
+                            <label for="reg_{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="auth-input-wrapper">
+                                <!-- Ref: 435f08b7 Soft Pastel Squircle Tile -->
+                                <div class="auth-input-tile" aria-hidden="true">
+                                    {% if field.name == 'first_name' or field.name == 'last_name' %}
+                                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                    {% elif field.name == 'email' %}
+                                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    {% elif field.name == 'phone' %}
+                                    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                    {% elif field.name == 'license_number' %}
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="13" y2="12"></line></svg>
+                                    {% elif field.name == 'branch' %}
+                                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                    {% elif field.name == 'role' %}
+                                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                    {% elif field.name == 'password' or field.name == 'confirm_password' %}
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    {% else %}
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>
+                                    {% endif %}
+                                </div>
+                                {{ field }}
+                                {% if field.name == 'password' or field.name == 'confirm_password' %}
+                                <button type="button" class="toggle-password" data-target="{{ field.id_for_label }}" aria-label="Show or hide password">
+                                    <svg class="icon eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <svg class="icon eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {{ field.errors }}
+                        </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary btn-auth-submit">
+                            <span>Create account</span>
+                            <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </form>
+
+                    <p class="auth-switch-link">
+                        Already registered? <button type="button" class="text-trigger" id="switchLoginBtn">&larr; Sign in here</button>
+                    </p>
+                </div>
+            </section>
         </div>
-    </section>
 
-    <aside class="auth-aside">
-        <h2 class="aside-title">Join the <span class="outline">network.</span></h2>
-        <p>Connect your branch so every pharmacist sees the same stock, in the same moment.</p>
-        <ul class="aside-list">
-            <li><svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span><strong>Branch directory</strong>Contact details for every location.</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg><span><strong>Live inventory</strong>One shared view of medicine stock.</span></li>
-            <li><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span><strong>Role-based access</strong>Pharmacist and head pharmacist accounts.</span></li>
-        </ul>
-    </aside>
+        <!-- Sliding Colored Overlay Panel -->
+        <aside class="auth-sliding-overlay" aria-live="polite">
+            <div class="auth-wave-decor" aria-hidden="true">
+                <svg viewBox="0 0 60 600" preserveAspectRatio="none">
+                    <path d="M0,0 Q50,150 15,300 T30,600 L60,600 L60,0 Z"></path>
+                </svg>
+            </div>
+
+            <!-- Login Brand Pane (Active when overlay is on the RIGHT in login mode) -->
+            <div class="overlay-brand-pane is-for-login">
+                <div class="auth-brand-content">
+                    <span class="auth-kicker">Multi-branch network</span>
+                    <h2 class="auth-heading">Never out of <span class="outline">reach.</span></h2>
+                    <p class="auth-desc">Check stock availability across all company branches, find the nearest in-stock branch, and act on alerts instantly.</p>
+
+                    <div class="auth-features">
+                        <div class="auth-feat-item">
+                            <!-- Ref: 435f08b7 Soft Squircle Badge with Dark Wireframe Icon -->
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"></path>
+                                    <path d="M12 12l8-4.5"></path>
+                                    <path d="M12 12v9"></path>
+                                    <path d="M12 12L4 7.5"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Cross-branch locator</strong>
+                                <span>See exact stock and travel distance.</span>
+                            </div>
+                        </div>
+
+                        <div class="auth-feat-item">
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Real-time alerts</strong>
+                                <span>Instant notification when medicine runs low.</span>
+                            </div>
+                        </div>
+
+                        <div class="auth-feat-item">
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Role-based access</strong>
+                                <span>Pharmacist and Head Pharmacist accounts.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="overlay-action-btn" id="overlayBtnRegister">
+                        <span>Create account here &rarr;</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Register Brand Pane (Active when overlay is on the LEFT in register mode) -->
+            <div class="overlay-brand-pane is-for-register">
+                <div class="auth-brand-content">
+                    <span class="auth-kicker">Join the network</span>
+                    <h2 class="auth-heading">Connected <span class="outline">branches.</span></h2>
+                    <p class="auth-desc">Register your pharmacist account to connect with all company branches. Real-time inventory sync, instant stock locating, and seamless inter-branch coordination.</p>
+
+                    <div class="auth-features">
+                        <div class="auth-feat-item">
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Branch directory & map</strong>
+                                <span>Find nearest branches with live medicine stock.</span>
+                            </div>
+                        </div>
+
+                        <div class="auth-feat-item">
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"></path>
+                                    <path d="M12 12l8-4.5"></path>
+                                    <path d="M12 12v9"></path>
+                                    <path d="M12 12L4 7.5"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>5-second sync guarantee</strong>
+                                <span>Live updates across all branches when stock changes.</span>
+                            </div>
+                        </div>
+
+                        <div class="auth-feat-item">
+                            <div class="icon-tile-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Pharmacist profiles</strong>
+                                <span>Secure authentication with PRC license verification.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="overlay-action-btn" id="overlayBtnLogin">
+                        <span>&larr; Back to sign in</span>
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script type="importmap">
+{
+    "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+        "@shadergradient/react": "https://esm.sh/@shadergradient/react@2.4.20?deps=react@18.3.1,react-dom@18.3.1,three@0.169.0,@react-three/fiber@8.17.10"
+    }
+}
+</script>
+<script type="module" src="{% static 'js/landing/shadergradient-mount.js' %}?v={% now 'U' %}"></script>
+<script>
+    (function () {
+        const card = document.getElementById("authSliderCard");
+        const topbarSignIn = document.getElementById("topbarSignIn");
+        const topbarGetStarted = document.getElementById("topbarGetStarted");
+
+        function setAuthMode(mode, pushState = true) {
+            if (!card) return;
+
+            if (mode === "register") {
+                card.classList.remove("mode-login");
+                card.classList.add("mode-register");
+                document.title = "Register — Tapick";
+                if (topbarSignIn) topbarSignIn.classList.remove("active");
+                if (topbarGetStarted) topbarGetStarted.classList.add("active");
+                if (pushState) {
+                    history.pushState({ mode: "register" }, "", "{% url 'register:register' %}");
+                }
+            } else {
+                card.classList.remove("mode-register");
+                card.classList.add("mode-login");
+                document.title = "Sign In — Tapick";
+                if (topbarSignIn) topbarSignIn.classList.add("active");
+                if (topbarGetStarted) topbarGetStarted.classList.remove("active");
+                if (pushState) {
+                    history.pushState({ mode: "login" }, "", "{% url 'login:login' %}");
+                }
+            }
+
+            // Anime.js kinetic reveal on active form pane
+            if (typeof anime !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                const targetSelector = mode === "register" ? "#registerFormPane .auth-form-inner > *" : "#loginFormPane .auth-form-inner > *";
+                anime({
+                    targets: targetSelector,
+                    opacity: [0, 1],
+                    translateY: [16, 0],
+                    delay: anime.stagger(40, { start: 220 }),
+                    duration: 650,
+                    easing: "easeOutCubic"
+                });
+            }
+        }
+
+        // Attach Click Listeners
+        document.getElementById("switchRegisterBtn")?.addEventListener("click", () => setAuthMode("register"));
+        document.getElementById("overlayBtnRegister")?.addEventListener("click", () => setAuthMode("register"));
+
+        document.getElementById("switchLoginBtn")?.addEventListener("click", () => setAuthMode("login"));
+        document.getElementById("overlayBtnLogin")?.addEventListener("click", () => setAuthMode("login"));
+
+        topbarSignIn?.addEventListener("click", (e) => {
+            e.preventDefault();
+            setAuthMode("login");
+        });
+
+        topbarGetStarted?.addEventListener("click", (e) => {
+            e.preventDefault();
+            setAuthMode("register");
+        });
+
+        // Browser Back/Forward navigation
+        window.addEventListener("popstate", (e) => {
+            if (e.state && e.state.mode) {
+                setAuthMode(e.state.mode, false);
+            } else if (window.location.pathname.includes("register")) {
+                setAuthMode("register", false);
+            } else {
+                setAuthMode("login", false);
+            }
+        });
+
+        // Initial entrance animation
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof anime !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                anime({
+                    targets: "#authSliderCard",
+                    opacity: [0, 1],
+                    translateY: [24, 0],
+                    scale: [0.97, 1],
+                    duration: 800,
+                    easing: "easeOutCubic"
+                });
+                anime({
+                    targets: ".auth-avatar-badge",
+                    scale: [0.6, 1],
+                    opacity: [0, 1],
+                    duration: 650,
+                    delay: 150,
+                    easing: "easeOutBack"
+                });
+            }
+        });
+    })();
+</script>
 {% endblock %}
