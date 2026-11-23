@@ -17,4 +17,6 @@ urlpatterns = [
     path("live-status/", views.live_status, name="live_status"),
     path("locate/", views.locate_medicine, name="locate"),
     path("notify-branch/", views.send_branch_notice, name="notify_branch"),
+    path("reorder-analysis/", views.reorder_analysis, name="reorder_analysis"),
+    path("queries/", views.reorder_analysis, name="queries"),
 ]

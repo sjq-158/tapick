@@ -16,7 +16,7 @@ ROLE_PROFILES = {
 
 
 class RegisterForm(forms.ModelForm):
-    # --- Role table (Pharmacist / HeadPharmacist) ---
+    # Role-specific profile fields saved to Pharmacist or HeadPharmacist.
     first_name = forms.CharField(
         label="First Name", max_length=255,
         widget=forms.TextInput(attrs={"placeholder": "Jane"}),
@@ -34,7 +34,7 @@ class RegisterForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"placeholder": "+63 900 000 0000"}),
     )
 
-    # --- User table ---
+    # Core user credentials and branch assignment saved to User.
     branch = forms.ModelChoiceField(
         label="Branch Location / ID",
         queryset=Branch.objects.none(),

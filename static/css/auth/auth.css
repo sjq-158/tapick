@@ -1,13 +1,6 @@
-/* ==========================================================================
-   Tapick Split-Screen Sliding Auth System (Login & Register)
-   Featuring:
-   - Sliding transition between Login & Register (desktop slide & mobile tabs)
-   - Soft pastel squircle icon tiles with dark charcoal line stroke (Ref: 435f08b7)
-   - Luminous circular avatar badge with white halo & dual-tone glyph (Ref: c70815a5)
-   - Full dark mode & reduced motion support
-   ========================================================================== */
+/* Split-screen sliding authentication styling for login and register. */
 
-/* ── Page Wrapper ────────────────────────────────────────────────────────── */
+/* Page layout wrapper */
 .auth-page-wrap {
     position: relative;
     z-index: 10;
@@ -20,7 +13,7 @@
     box-sizing: border-box;
 }
 
-/* ── The Sliding Card Container ──────────────────────────────────────────── */
+/* Sliding card container */
 .auth-slider-card {
     position: relative;
     width: 100%;
@@ -42,7 +35,7 @@
                 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-/* ── Two Form Panes Base Grid ────────────────────────────────────────────── */
+/* Two-column form layout */
 .auth-forms-container {
     position: relative;
     width: 100%;
@@ -96,7 +89,7 @@
     transform: translateX(-40px);
 }
 
-/* ── Sliding Colored Overlay Panel ───────────────────────────────────────── */
+/* Sliding colored brand overlay panel */
 .auth-sliding-overlay {
     position: absolute;
     top: 0;
@@ -143,7 +136,7 @@
     z-index: 1;
 }
 
-/* ── Brand Content Panels Inside Overlay ─────────────────────────────────── */
+/* Brand information panels inside overlay */
 .overlay-brand-pane {
     position: absolute;
     inset: 0;
@@ -229,7 +222,7 @@
     margin: 0;
 }
 
-/* ── Organic Wave Divider Edge on the Overlay ────────────────────────────── */
+/* Curving divider border on overlay */
 .auth-wave-decor {
     position: absolute;
     top: 0;
@@ -266,9 +259,7 @@
     fill: currentColor;
 }
 
-/* ── Soft Tinted Squircle Icon Tiles (Ref: 435f08b7) ─────────────────────── */
-/* Instead of solid flat white icons, this uses a soft pastel mint/ice tile
-   with dark wireframe outline strokes, giving subtle depth & tactile softness */
+/* Tinted squircle icon tiles */
 .icon-tile-badge {
     width: 44px;
     height: 44px;
@@ -366,7 +357,7 @@
     color: #131515;
 }
 
-/* ── Luminous Avatar Badge with White Ring & Dual-Tone (Ref: c70815a5) ──── */
+/* Circular avatar badge with subtle glow */
 .auth-avatar-badge {
     width: 80px;
     height: 80px;

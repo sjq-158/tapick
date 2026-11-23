@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Subquery
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -117,7 +117,11 @@ def get_filtered_inventory(request):
         branch_id = ""
 
     status = request.GET.get("status", "")
-    if status in STATUS_FILTERS:
+    if status == "subquery":
+        # Subquery filter: selects medicines with branch stock at or below the reorder threshold.
+        critical_ids = Inventory.objects.filter(branch__in=branches, quantity_on_hand__lte=F("reorder_threshold")).values("medicine_id")
+        rows = rows.filter(medicine_id__in=Subquery(critical_ids))
+    elif status in STATUS_FILTERS:
         rows = rows.filter(STATUS_FILTERS[status])
     else:
         status = ""
@@ -322,7 +326,7 @@ def add_medicine(request):
     return redirect("inventory:list")
 
 
-# ── File Upload & Content Understanding ───────────────────────────────────────
+# File upload processing and inventory content import.
 @login_required
 @require_POST
 def upload_file(request):
@@ -406,7 +410,7 @@ def download_template(request):
     return response
 
 
-# ── Data Summary Export (CSV and PDF) ─────────────────────────────────────────
+# Export inventory summaries in CSV and PDF formats.
 @login_required
 def export_csv(request):
     """Exports inventory data and summary metrics as a UTF-8 BOM CSV spreadsheet."""
@@ -443,7 +447,7 @@ def export_pdf(request):
     return response
 
 
-# ── Real-Time 5s Sync & Cross-Branch Stock Locator API ────────────────────────
+# Live status polling and cross-branch stock locator endpoints.
 @login_required
 def live_status(request):
     """
@@ -593,4 +597,65 @@ def send_branch_notice(request):
         messages.success(request, msg)
 
     return redirect("inventory:list")
+
+
+@login_required
+def reorder_analysis(request):
+    """
+    Performs multi-branch stock inventory auditing and identifies medicines
+    requiring reorder based on branch threshold limits.
+    Combines records across related tables using select_related() and executes
+    nested threshold filtering using Subquery().
+    """
+    user = request.user
+    branches = visible_branches(user)
+
+    # Combines inventory records with medicine and branch details using SQL JOIN.
+    join_queryset = (
+        Inventory.objects.filter(branch__in=branches, medicine__is_active=True)
+        .select_related("medicine", "branch")
+        .order_by("medicine__medicine_name", "branch__branch_name")
+    )
+    join_sql = str(join_queryset.query)
+    join_samples = list(join_queryset[:12])
+
+    # Identifies medicines whose stock is at or below reorder threshold using SQL SUBQUERY.
+    inner_query = (
+        Inventory.objects.filter(
+            branch__in=branches,
+            quantity_on_hand__lte=F("reorder_threshold"),
+        ).values("medicine_id")
+    )
+    inner_sql = str(inner_query.query)
+
+    subquery_queryset = (
+        Medicine.objects.filter(
+            medicine_id__in=Subquery(inner_query),
+            is_active=True,
+        )
+        .order_by("medicine_name")
+    )
+    subquery_sql = str(subquery_queryset.query)
+    subquery_samples = list(subquery_queryset[:12])
+
+    # Prints generated SQL queries to console for database inspection.
+    print("[SQL Audit] Inventory Multi-Branch Join (select_related):")
+    print(join_sql)
+    print("[SQL Audit] Reorder Threshold Subquery (Subquery):")
+    print(subquery_sql)
+
+    return render(
+        request,
+        "inventory/reorder_analysis.html",
+        {
+            "join_samples": join_samples,
+            "join_sql": join_sql,
+            "subquery_samples": subquery_samples,
+            "subquery_sql": subquery_sql,
+            "inner_sql": inner_sql,
+            "join_count": join_queryset.count(),
+            "subquery_count": subquery_queryset.count(),
+        },
+    )
+
 

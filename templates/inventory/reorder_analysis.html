@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Stock Reorder Analysis & Multi-Branch Audit — Tapick{% endblock %}
+
+{% block extra_css %}
+<style>
+.audit-page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 32px clamp(16px, 4vw, 40px) 80px;
+    display: grid;
+    gap: 32px;
+}
+
+.audit-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+}
+
+.audit-hero h1 {
+    font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+    font-weight: 800;
+    margin: 4px 0;
+}
+
+.audit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 20px;
+}
+
+.audit-card-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.audit-badge-num {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #E8F9F8;
+    border: 1px solid rgba(166, 231, 209, 0.7);
+    color: #2B2C28;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    display: grid;
+    place-items: center;
+}
+
+[data-theme="dark"] .audit-badge-num {
+    background: rgba(51, 153, 137, 0.25);
+    border-color: rgba(125, 226, 209, 0.4);
+    color: #7DE2D1;
+}
+
+.audit-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.audit-info-box {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(62, 76, 95, 0.04);
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+}
+
+[data-theme="dark"] .audit-info-box {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.audit-info-box strong {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.code-container {
+    background: #1e242b;
+    color: #E8F9F8;
+    border-radius: 14px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+[data-theme="dark"] .code-container {
+    background: #101418;
+    border-color: rgba(125, 226, 209, 0.2);
+}
+
+.code-label {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7DE2D1;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+}
+
+.orm-snippet {
+    background: rgba(91, 192, 190, 0.12);
+    border: 1px solid rgba(91, 192, 190, 0.3);
+    color: var(--text);
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.result-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.result-table th {
+    background: var(--surface-2);
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.result-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.result-table tr:last-child td {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="audit-page">
+
+    <!-- Header section with navigation and summary description -->
+    <header class="audit-hero">
+        <div>
+            <p class="kicker">Inventory Management &middot; Stock Replenishment</p>
+            <h1>Multi-Branch Stock &amp; Reorder Analysis</h1>
+            <p class="muted">Audits inventory across company branches and identifies catalogued medicines requiring restock via relational queries.</p>
+        </div>
+        <div>
+            <a href="{% url 'inventory:list' %}" class="btn btn-ghost">
+                <svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Back to Inventory</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Part 1: SQL Join operation for multi-branch stock levels -->
+    <section class="audit-card" id="part1Join">
+        <div class="audit-card-head">
+            <div class="audit-badge-num">1</div>
+            <div>
+                <h2>Part 1: Multi-Branch Stock Overview (SQL JOIN)</h2>
+                <p class="muted">Combines records across related tables using Django ORM <code>select_related()</code> to produce an inner join.</p>
+            </div>
+        </div>
+
+        <div class="audit-info-grid">
+            <div class="audit-info-box">
+                <strong>Main Table</strong>
+                <code>inventory</code> (Inventory model)
+            </div>
+            <div class="audit-info-box">
+                <strong>Related Foreign Tables</strong>
+                <code>medicine</code> and <code>branch</code>
+            </div>
+            <div class="audit-info-box">
+                <strong>Foreign Key Links</strong>
+                <code>inventory.medicine_id &rarr; medicine.medicine_id</code><br>
+                <code>inventory.branch_id &rarr; branch.branch_id</code>
+            </div>
+            <div class="audit-info-box">
+                <strong>Relationship Type</strong>
+                Many-to-One (<code>ForeignKey</code>)
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Django ORM Implementation:</h3>
+            <div class="orm-snippet">
+                inventory_records = Inventory.objects.select_related('medicine', 'branch').all()
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Generated SQL Statement (Inspected via <code>queryset.query</code>):</h3>
+            <div class="code-container">
+                <span class="code-label">PostgreSQL / Supabase</span>
+                <pre>{{ join_sql }}</pre>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Database Query Results (Displaying {{ join_samples|length }} of {{ join_count }} rows):</h3>
+            <div class="result-table-wrap">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>Inv ID</th>
+                            <th>Medicine (medicine table)</th>
+                            <th>Generic Name (medicine table)</th>
+                            <th>Branch (branch table)</th>
+                            <th>Stock On Hand</th>
+                            <th>Reorder Threshold</th>
+                            <th>Unit Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in join_samples %}
+                        <tr>
+                            <td><strong>#{{ item.inventory_id }}</strong></td>
+                            <td>{{ item.medicine.medicine_name }}</td>
+                            <td class="muted">{{ item.medicine.generic_name }}</td>
+                            <td>{{ item.branch.branch_name }}</td>
+                            <td><strong>{{ item.quantity_on_hand }}</strong></td>
+                            <td>{{ item.reorder_threshold }}</td>
+                            <td>&#8369;{{ item.medicine.unit_price }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding: 24px;" class="muted">No inventory records found. Add stock records to view live results.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 2: SQL Subquery operation for critical threshold reorders -->
+    <section class="audit-card" id="part2Subquery">
+        <div class="audit-card-head">
+            <div class="audit-badge-num">2</div>
+            <div>
+                <h2>Part 2: Critical Stock Reorder Analysis (SQL SUBQUERY)</h2>
+                <p class="muted">Uses an inner query to filter records in an outer query using <code>django.db.models.Subquery</code>.</p>
+            </div>
+        </div>
+
+        <div class="audit-info-grid">
+            <div class="audit-info-box">
+                <strong>Outer Table</strong>
+                <code>medicine</code> (Medicine model)
+            </div>
+            <div class="audit-info-box">
+                <strong>Inner Table (Subquery)</strong>
+                <code>inventory</code> (Inventory model)
+            </div>
+            <div class="audit-info-box">
+                <strong>Business Logic</strong>
+                Identify catalogue medicines whose stock quantity has reached or fallen below the branch reorder threshold.
+            </div>
+            <div class="audit-info-box">
+                <strong>Filter Condition</strong>
+                <code>medicine_id IN (SELECT medicine_id FROM inventory WHERE quantity_on_hand &lt;= reorder_threshold)</code>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Django ORM Implementation:</h3>
+            <div class="orm-snippet">
+                from django.db.models import Subquery, F<br><br>
+                # Inner query: select medicine_ids needing replenishment<br>
+                critical_ids = Inventory.objects.filter(quantity_on_hand__lte=F('reorder_threshold')).values('medicine_id')<br><br>
+                # Outer query: retrieve medicine profiles matching the subquery ids<br>
+                medicines_to_reorder = Medicine.objects.filter(medicine_id__in=Subquery(critical_ids))
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Generated SQL Statement (Inspected via <code>queryset.query</code>):</h3>
+            <div class="code-container">
+                <span class="code-label">PostgreSQL / Supabase</span>
+                <pre>{{ subquery_sql }}</pre>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Database Query Results (Displaying {{ subquery_samples|length }} of {{ subquery_count }} medicines needing reorder):</h3>
+            <div class="result-table-wrap">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>Medicine ID</th>
+                            <th>Medicine Name</th>
+                            <th>Generic Name</th>
+                            <th>Category</th>
+                            <th>Unit Price</th>
+                            <th>Prescription Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for med in subquery_samples %}
+                        <tr>
+                            <td><strong>#{{ med.medicine_id }}</strong></td>
+                            <td>{{ med.medicine_name }}</td>
+                            <td class="muted">{{ med.generic_name }}</td>
+                            <td><span class="chip">{{ med.category }}</span></td>
+                            <td>&#8369;{{ med.unit_price }}</td>
+                            <td>{% if med.requires_prescription %}<span class="badge badge--warn">Rx Required</span>{% else %}<span class="badge badge--ok">OTC</span>{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding: 24px;" class="muted">No medicines currently below threshold. Adjust a stock quantity to view live subquery results.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Part 3: Supabase database schema and verification guide -->
+    <section class="audit-card">
+        <div class="audit-card-head">
+            <div class="audit-badge-num">3</div>
+            <div>
+                <h2>Part 3: Supabase Database Architecture &amp; Verification</h2>
+                <p class="muted">Summary of relational tables, foreign key constraints, and SQL editor execution in Supabase.</p>
+            </div>
+        </div>
+
+        <div class="audit-info-grid">
+            <div class="audit-info-box">
+                <strong>Table: <code>medicine</code></strong>
+                Holds product catalogue records. Primary Key: <code>medicine_id</code>. Foreign Key: <code>company_id &rarr; company</code>.
+            </div>
+            <div class="audit-info-box">
+                <strong>Table: <code>branch</code></strong>
+                Holds physical branch locations. Primary Key: <code>branch_id</code>. Foreign Key: <code>company_id &rarr; company</code>.
+            </div>
+            <div class="audit-info-box">
+                <strong>Table: <code>inventory</code></strong>
+                Links medicines and branch locations. Foreign Keys: <code>branch_id &rarr; branch</code> and <code>medicine_id &rarr; medicine</code>.
+            </div>
+            <div class="audit-info-box">
+                <strong>Supabase SQL Editor Verification</strong>
+                Executing the generated SQL queries inside the Supabase SQL Editor tab returns the exact same dataset directly from PostgreSQL.
+            </div>
+        </div>
+    </section>
+
+</main>
+{% endblock %}
