@@ -219,7 +219,11 @@
         <div>
             <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Django ORM Implementation:</h3>
             <div class="orm-snippet">
-                inventory_records = Inventory.objects.select_related('medicine', 'branch').all()
+                inventory_records = (
+                    Inventory.objects.filter(branch__company_id=request.user.company_id, medicine__is_active=True)
+                    .select_related('medicine', 'branch')
+                    .order_by('medicine__medicine_name', 'branch__branch_name')
+                )
             </div>
         </div>
 
@@ -301,10 +305,10 @@
             <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Django ORM Implementation:</h3>
             <div class="orm-snippet">
                 from django.db.models import Subquery, F<br><br>
-                # Inner query: select medicine_ids needing replenishment<br>
-                critical_ids = Inventory.objects.filter(quantity_on_hand__lte=F('reorder_threshold')).values('medicine_id')<br><br>
-                # Outer query: retrieve medicine profiles matching the subquery ids<br>
-                medicines_to_reorder = Medicine.objects.filter(medicine_id__in=Subquery(critical_ids))
+                # Inner query: select medicine_ids at or below branch reorder threshold<br>
+                critical_ids = Inventory.objects.filter(branch__company_id=company_id, quantity_on_hand__lte=F('reorder_threshold')).values('medicine_id')<br><br>
+                # Outer query: retrieve active medicines matching the inner subquery<br>
+                medicines_to_reorder = Medicine.objects.filter(medicine_id__in=Subquery(critical_ids), company_id=company_id, is_active=True).order_by('medicine_name')
             </div>
         </div>
 

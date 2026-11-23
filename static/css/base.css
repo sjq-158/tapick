@@ -78,7 +78,7 @@ body {
     transition: background 0.3s, color 0.3s;
 }
 
-/* ---------- ShaderGradient Canvas Layer (ruucm/shadergradient) ---------- */
+/* Canvas gradient animation layer */
 .shader-gradient-bg {
     position: fixed;
     top: 0;
@@ -143,7 +143,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
     paint-order: stroke fill;
 }
 
-/* ---------- Header ---------- */
+/* Top navigation bar and header */
 .app-header {
     position: sticky;
     top: 0;
@@ -244,7 +244,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .icon-btn:hover { transform: translateY(-2px); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-soft); }
 
-/* ---------- Layout ---------- */
+/* Grid and page layout containers */
 .page {
     flex: 1;
     width: 100%;
@@ -266,7 +266,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .grid-even { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .grid-aside { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
 
-/* ---------- Cards ---------- */
+/* Card surfaces and metric statistics */
 .card {
     background: color-mix(in srgb, var(--surface) 93%, transparent);
     backdrop-filter: blur(14px);
@@ -336,7 +336,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .stat-value { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 2rem; line-height: 1.1; }
 .stat-hint { font-size: 0.76rem; color: var(--muted); }
 
-/* ---------- Tables, lists, badges ---------- */
+/* Data tables, activity feeds, and badges */
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
 .table th {
@@ -394,7 +394,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .branch-card p { font-size: 0.84rem; color: var(--muted); }
 .branch-phone { font-size: 0.84rem; font-weight: 700; color: var(--accent-text); text-decoration: none; }
 
-/* ---------- Buttons ---------- */
+/* Button components and interactive states */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -444,7 +444,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .btn-sm { padding: 8px 16px; font-size: 0.82rem; }
 .btn-block { width: 100%; margin-top: 8px; }
 
-/* ---------- Forms ---------- */
+/* Form inputs, toggles, and validation */
 .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field-group label { font-size: 0.82rem; font-weight: 700; }
 .field-group input:not([type="checkbox"]),
@@ -509,7 +509,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .switch input:checked + .switch-track::after { transform: translateX(20px); background: var(--on-primary); }
 .switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-/* ---------- Auth screens ---------- */
+/* Authentication card layout and sidebars */
 .auth-shell {
     flex: 1;
     width: 100%;
@@ -567,7 +567,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .aside-list strong { display: block; font-size: 0.92rem; }
 .aside-list li span { font-size: 0.84rem; color: var(--muted); }
 
-/* ---------- Toasts and theme button ---------- */
+/* Toast alerts and theme switch buttons */
 .toast-stack {
     position: fixed;
     top: 84px;
@@ -603,7 +603,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 
 .theme-fab { display: none; }
 
-/* ---------- Responsive ---------- */
+/* Media queries for tablet and mobile devices */
 @media (max-width: 960px) {
     .grid-main, .grid-even, .grid-aside { grid-template-columns: 1fr; }
     .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

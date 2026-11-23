@@ -1,4 +1,4 @@
-/* ── Bell + badge ─────────────────────────────────────────────────────────── */
+/* Bell + badge */
 .bell { position: relative; }
 .bell.is-active { background: var(--primary); color: var(--on-primary); border-color: transparent; }
 .bell-badge {
@@ -29,12 +29,12 @@
     75% { transform: rotate(4deg); }
 }
 
-/* ── Notification dropdown wrapper ───────────────────────────────────────── */
+/* Notification dropdown wrapper */
 .notif-wrap {
     position: relative;
 }
 
-/* ── Dropdown panel ──────────────────────────────────────────────────────── */
+/* Dropdown panel */
 .notif-panel {
     position: absolute;
     top: calc(100% + 10px);
@@ -66,7 +66,7 @@
     font-weight: 700;
 }
 
-/* ── Panel list ──────────────────────────────────────────────────────────── */
+/* Panel list */
 .notif-panel-list {
     list-style: none;
     max-height: 320px;
@@ -135,7 +135,7 @@
     color: var(--muted);
 }
 
-/* ── "See all" footer ────────────────────────────────────────────────────── */
+/* "See all" footer */
 .notif-panel-foot {
     padding: 10px 16px;
     border-top: 1px solid var(--border);
@@ -150,7 +150,7 @@
 }
 .notif-see-all:hover { color: var(--accent); text-decoration: underline; }
 
-/* ── Live toasts ─────────────────────────────────────────────────────────── */
+/* Live toasts */
 .live-toasts {
     position: fixed;
     top: 84px;
@@ -195,7 +195,7 @@
 .live-toast-body p { font-size: 0.82rem; color: var(--muted); }
 @keyframes toast-in { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
 
-/* ── Live pill (full page) ───────────────────────────────────────────────── */
+/* Live pill (full page) */
 .live-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; }
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
 .live-pill.is-live .live-dot { background: var(--accent); animation: live-pulse 2s infinite; }
@@ -205,7 +205,7 @@
     100% { box-shadow: 0 0 0 0 transparent; }
 }
 
-/* ── Full-page notice list ───────────────────────────────────────────────── */
+/* Full-page notice list */
 .notice-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .notice-filters .field-group { margin-bottom: 0; min-width: 180px; }
 
@@ -243,7 +243,7 @@
 
 .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
+/* Responsive */
 @media (max-width: 640px) {
     .notice { flex-wrap: wrap; }
     .notice-actions { width: 100%; justify-content: flex-end; }

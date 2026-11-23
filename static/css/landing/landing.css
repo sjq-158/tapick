@@ -1,6 +1,4 @@
-/* =========================================
-   Tapick landing page
-   ========================================= */
+/* Tapick landing page styles */
 :root {
     --teal: #5BC0BE;
     --mint: #A6E7D1;
@@ -18,7 +16,7 @@
 
 html { scroll-behavior: smooth; }
 
-/* ---------- Background (ShaderGradient mounts here) ---------- */
+/* Background gradient layer */
 .bg-gradient {
     position: fixed;
     inset: 0;
@@ -34,7 +32,7 @@ html { scroll-behavior: smooth; }
 }
 main, .footer { position: relative; z-index: 1; width: 100%; }
 
-/* ---------- Shared pieces ---------- */
+/* Shared typography and button utilities */
 .outline-title {
     font-family: 'Montserrat', sans-serif;
     font-weight: 800;
@@ -118,7 +116,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 }
 .chip--warn { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
 
-/* ---------- Top bar ---------- */
+/* Top navigation bar */
 .topbar {
     position: fixed;
     top: 16px;
@@ -169,7 +167,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
     z-index: 60;
 }
 
-/* ---------- Hero ---------- */
+/* Hero section */
 .hero { max-width: 1180px; margin: 0 auto; padding: 150px 24px 40px; text-align: center; }
 .eyebrow {
     display: inline-block;
@@ -196,7 +194,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 .hero-lead { max-width: 620px; margin: 0 auto; font-size: 1.1rem; line-height: 1.65; color: var(--landing-text); opacity: 0.9; }
 .hero-cta { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-/* ---------- App preview card ---------- */
+/* Interactive app preview device mock */
 .device-wrap { max-width: 920px; margin: 64px auto 0; perspective: 1400px; }
 .device {
     --p: 1;
@@ -218,7 +216,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 .device-head small, .locator-title small { color: var(--text-muted); font-size: 0.8rem; }
 .device-head h3, .locator-title h3 { font-size: 1.5rem; font-weight: 800; }
 
-/* ---------- Branch list + animated bars ---------- */
+/* Branch stock list with progress bars */
 .branch-list { list-style: none; display: grid; gap: 12px; }
 .branch-list li {
     display: grid;
@@ -245,7 +243,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 }
 .bars.in .bar span { width: var(--w); }
 
-/* ---------- Sections ---------- */
+/* Page content sections */
 .section { max-width: 1180px; margin: 0 auto; padding: 100px 24px; scroll-margin-top: 40px; }
 .section-head { text-align: center; margin-bottom: 56px; }
 .section-head h2, .split-text h2 { font-size: clamp(2rem, 4.6vw, 3.4rem); font-weight: 800; line-height: 1.1; }
@@ -383,7 +381,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 .footer nav a { color: var(--slate-deep); text-decoration: none; font-size: 0.88rem; font-weight: 500; }
 .footer nav a:hover { opacity: 0.6; }
 
-/* ---------- Dark mode overrides for landing page ---------- */
+/* Dark mode overrides for landing page */
 [data-theme="dark"] .bg-gradient {
     background: linear-gradient(135deg, #0d1f1e, #154c44 55%, #1a3a4a);
 }
@@ -518,7 +516,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
     background: #339989;
 }
 
-/* ---------- Scroll reveal ---------- */
+/* Scroll reveal animation styles */
 [data-reveal] {
     opacity: 0;
     transform: translateY(32px);
@@ -530,7 +528,7 @@ main, .footer { position: relative; z-index: 1; width: 100%; }
 [data-reveal="zoom"]  { transform: scale(0.94); }
 [data-reveal].in { opacity: 1; transform: none; }
 
-/* ---------- Responsive ---------- */
+/* Responsive layouts for tablet and mobile */
 @media (max-width: 960px) {
     .topnav { display: none; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }

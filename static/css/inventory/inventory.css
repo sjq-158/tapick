@@ -1,10 +1,10 @@
-/* ── Filter Form ─────────────────────────────────────────────────────────── */
+/* Filter form layout and actions */
 .inv-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .inv-filters .field-group { margin-bottom: 0; flex: 1 1 160px; }
 .inv-filters .field-group:first-child { flex: 2 1 240px; }
 .inv-filter-actions { display: flex; gap: 8px; }
 
-/* ── Export Dropdown ─────────────────────────────────────────────────────── */
+/* Export dropdown menu */
 .dropdown-wrap {
     position: relative;
     display: inline-block;
@@ -65,7 +65,7 @@
     color: var(--muted);
 }
 
-/* ── Cross-Branch Stock Locator Map Section ──────────────────────────────── */
+/* Cross-branch stock locator map container */
 .map-card {
     padding: 24px;
     margin-bottom: 24px;
@@ -300,7 +300,7 @@
     margin-top: 4px;
 }
 
-/* ── Cross-Branch stock table badges ─────────────────────────────────────── */
+/* Stock availability table badges */
 .nearest-stock-badge {
     display: flex;
     flex-direction: column;
@@ -354,7 +354,7 @@
     background: color-mix(in srgb, var(--warn) 4%, transparent);
 }
 
-/* ── Upload & Guide Modal ────────────────────────────────────────────────── */
+/* Inventory file upload dialog */
 .upload-guide-card {
     margin-top: 14px;
     margin-bottom: 14px;
@@ -416,7 +416,7 @@ textarea:focus {
 .check-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .check-row input { width: 18px; height: 18px; accent-color: var(--accent); }
 
-/* ── Modals & Confirmation Dialogs ───────────────────────────────────────── */
+/* Modal dialogs and confirmation popups */
 .modal {
     margin: auto;
     padding: 0;

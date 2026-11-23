@@ -119,7 +119,11 @@ def get_filtered_inventory(request):
     status = request.GET.get("status", "")
     if status == "subquery":
         # Subquery filter: selects medicines with branch stock at or below the reorder threshold.
-        critical_ids = Inventory.objects.filter(branch__in=branches, quantity_on_hand__lte=F("reorder_threshold")).values("medicine_id")
+        reorder_scope = {"branch_id": int(branch_id)} if branch_id else {"branch__company_id": user.company_id}
+        critical_ids = Inventory.objects.filter(
+            quantity_on_hand__lte=F("reorder_threshold"),
+            **reorder_scope,
+        ).values("medicine_id")
         rows = rows.filter(medicine_id__in=Subquery(critical_ids))
     elif status in STATUS_FILTERS:
         rows = rows.filter(STATUS_FILTERS[status])
@@ -253,57 +257,6 @@ def request_stock(request, pk):
         messages.info(request, "A request for this medicine was already sent in the last 10 minutes.")
     else:
         messages.warning(request, f"No other branch currently has {row.medicine} in stock.")
-    return redirect("inventory:list")
-
-
-@login_required
-@require_POST
-def send_branch_notice(request):
-    """
-    Directly sends a cross-branch notification / stock request to another branch.
-    Alerts all active pharmacists at that branch and company head pharmacists.
-    """
-    target_branch_id = request.POST.get("target_branch")
-    medicine_id = request.POST.get("medicine")
-    quantity = request.POST.get("quantity")
-    urgency = request.POST.get("urgency", "normal")
-    note = request.POST.get("note", "").strip()
-
-    if not target_branch_id:
-        messages.error(request, "Please select a target branch.")
-        return redirect("inventory:list")
-
-    target_branch = get_object_or_404(
-        Branch.objects.filter(company=request.user.company, is_active=True), pk=target_branch_id
-    )
-
-    medicine = None
-    if medicine_id and medicine_id.isdigit():
-        medicine = Medicine.objects.filter(company=request.user.company, pk=int(medicine_id)).first()
-
-    status, count = send_custom_branch_notification(
-        target_branch=target_branch,
-        sender_user=request.user,
-        medicine=medicine,
-        quantity=quantity,
-        note=note,
-        urgency=urgency,
-    )
-
-    if status == "sent":
-        messages.success(
-            request,
-            f"Notification successfully delivered to {target_branch.branch_name}! "
-            f"Reflected on the screens of {count} employee(s) (head pharmacist and pharmacists at {target_branch.branch_name})."
-        )
-    elif status == "no_recipients":
-        messages.warning(
-            request,
-            f"Notification recorded, but no active pharmacists are currently assigned to {target_branch.branch_name}."
-        )
-    else:
-        messages.error(request, "Failed to send notification.")
-
     return redirect("inventory:list")
 
 
@@ -608,11 +561,11 @@ def reorder_analysis(request):
     nested threshold filtering using Subquery().
     """
     user = request.user
-    branches = visible_branches(user)
+    company_id = user.company_id
 
     # Combines inventory records with medicine and branch details using SQL JOIN.
     join_queryset = (
-        Inventory.objects.filter(branch__in=branches, medicine__is_active=True)
+        Inventory.objects.filter(branch__company_id=company_id, medicine__is_active=True)
         .select_related("medicine", "branch")
         .order_by("medicine__medicine_name", "branch__branch_name")
     )
@@ -622,7 +575,7 @@ def reorder_analysis(request):
     # Identifies medicines whose stock is at or below reorder threshold using SQL SUBQUERY.
     inner_query = (
         Inventory.objects.filter(
-            branch__in=branches,
+            branch__company_id=company_id,
             quantity_on_hand__lte=F("reorder_threshold"),
         ).values("medicine_id")
     )
@@ -631,6 +584,7 @@ def reorder_analysis(request):
     subquery_queryset = (
         Medicine.objects.filter(
             medicine_id__in=Subquery(inner_query),
+            company_id=company_id,
             is_active=True,
         )
         .order_by("medicine_name")
