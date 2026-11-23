@@ -201,153 +201,245 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ── Interactive Leaflet Map & Cross-Branch Stock Locator ──────────────────
+    // ── Interactive MapLibre GL Map & Cross-Branch Stock Locator ─────────────
     const mapContainer = document.getElementById("locatorMap");
     let map = null;
-    let markersLayer = null;
+    let markersOnMap = [];
     let routeLine = null;
     let branchData = [];
-    let initialBounds = [];
+    let initialBounds = null;
+    let is3D = false;
 
-    if (mapContainer && typeof L !== "undefined") {
+    // OpenFreeMap style URL (Bright style — free, open-source, no API key required)
+    const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
+
+    if (mapContainer && typeof maplibregl !== "undefined") {
         try {
             branchData = JSON.parse(mapContainer.dataset.branches || "[]");
         } catch (e) {
             branchData = [];
         }
 
-        // Initialize Map with responsive zooming
-        const defaultCenter = [10.3157, 123.8854]; // Metro Cebu
-        map = L.map("locatorMap", {
+        const defaultCenter = [123.8854, 10.3157]; // Metro Cebu [lng, lat] for MapLibre
+        map = new maplibregl.Map({
+            container: "locatorMap",
+            style: OPENFREEMAP_STYLE,
             center: defaultCenter,
-            zoom: 12,
-            minZoom: 9,
+            zoom: 11,
+            minZoom: 8,
             maxZoom: 18,
-            zoomControl: true,
-            scrollWheelZoom: true,
-            wheelDebounceTime: 40,
-            wheelPxPerZoomLevel: 60,
-            zoomAnimation: true,
-            fadeAnimation: true,
-            markerZoomAnimation: true,
+            pitch: 0,
+            bearing: 0,
         });
 
-        // OpenStreetMap Tile Layer
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-        }).addTo(map);
+        // Add zoom + compass controls
+        map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-        markersLayer = L.layerGroup().addTo(map);
+        // Helper to add 3D building extrusions from OpenFreeMap vector tiles
+        function setup3DBuildings() {
+            if (map.getLayer("3d-buildings")) return;
+            const layers = map.getStyle().layers;
+            let labelLayerId;
+            for (let i = 0; i < layers.length; i++) {
+                if (layers[i].type === "symbol" && layers[i].layout && layers[i].layout["text-field"]) {
+                    labelLayerId = layers[i].id;
+                    break;
+                }
+            }
+            try {
+                map.addLayer({
+                    id: "3d-buildings",
+                    source: "openmaptiles",
+                    "source-layer": "building",
+                    type: "fill-extrusion",
+                    minzoom: 13,
+                    paint: {
+                        "fill-extrusion-color": [
+                            "interpolate",
+                            ["linear"],
+                            ["get", "render_height"],
+                            0, "#cbd5e1",
+                            50, "#94a3b8",
+                            100, "#64748b"
+                        ],
+                        "fill-extrusion-height": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            13, 0,
+                            15.05, ["get", "render_height"]
+                        ],
+                        "fill-extrusion-base": [
+                            "interpolate",
+                            ["linear"],
+                            ["zoom"],
+                            13, 0,
+                            15.05, ["get", "render_min_height"]
+                        ],
+                        "fill-extrusion-opacity": 0.8
+                    }
+                }, labelLayerId);
+            } catch (err) {}
+        }
 
-        // SVG Pin Icon Generator
-        const createPinIcon = (colorHex, isMine) => {
-            const svgPin = `
+        map.on("load", () => {
+            setup3DBuildings();
+            if (map.getLayer("3d-buildings")) {
+                map.setLayoutProperty("3d-buildings", "visibility", "none");
+            }
+        });
+
+        // ── Default / 3D Mode Switchers ──────────────────────────────────────
+        const btnMapDefault = document.getElementById("btnMapDefault");
+        const btnMap3D      = document.getElementById("btnMap3D");
+
+        function setMapMode(mode3d) {
+            is3D = mode3d;
+            if (is3D) {
+                map.easeTo({ pitch: 60, bearing: -20, duration: 800 });
+                setup3DBuildings();
+                if (map.getLayer("3d-buildings")) {
+                    map.setLayoutProperty("3d-buildings", "visibility", "visible");
+                }
+                if (btnMap3D) {
+                    btnMap3D.classList.add("is-active", "btn-primary");
+                    btnMap3D.classList.remove("btn-ghost");
+                }
+                if (btnMapDefault) {
+                    btnMapDefault.classList.remove("is-active", "btn-primary");
+                    btnMapDefault.classList.add("btn-ghost");
+                }
+            } else {
+                map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+                if (map.getLayer("3d-buildings")) {
+                    map.setLayoutProperty("3d-buildings", "visibility", "none");
+                }
+                if (btnMapDefault) {
+                    btnMapDefault.classList.add("is-active", "btn-primary");
+                    btnMapDefault.classList.remove("btn-ghost");
+                }
+                if (btnMap3D) {
+                    btnMap3D.classList.remove("is-active", "btn-primary");
+                    btnMap3D.classList.add("btn-ghost");
+                }
+            }
+        }
+
+        if (btnMapDefault) btnMapDefault.addEventListener("click", () => setMapMode(false));
+        if (btnMap3D) btnMap3D.addEventListener("click", () => setMapMode(true));
+
+        // ── Pin icon helper (SVG data URL) ───────────────────────────────────
+        function makePinElement(colorHex, isMine) {
+            const el = document.createElement("div");
+            el.className = "custom-map-pin";
+            el.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="30" height="40" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));">
-                    <path fill="${colorHex}" stroke="#ffffff" stroke-width="1.6" d="M12 0C5.37 0 0 5.37 0 12c0 8.5 12 20 12 20s12-11.5 12-20c0-6.63-5.37-12-12-12z"/>
+                    <path fill="${colorHex}" stroke="#ffffff" stroke-width="1.6" d="M12 0C5.37 0 0 5.37 0 12c0 8.5 12 20 12 20s12-11.5 12-20C24 5.37 18.63 0 12 0z"/>
                     <circle cx="12" cy="11" r="5" fill="#ffffff"/>
-                    ${isMine ? '<circle cx="12" cy="11" r="2.5" fill="' + colorHex + '"/>' : ''}
-                </svg>
-            `;
-            return L.divIcon({
-                className: "custom-map-pin",
-                html: svgPin,
-                iconSize: [30, 40],
-                iconAnchor: [15, 40],
-                popupAnchor: [0, -36],
-            });
-        };
+                    ${isMine ? `<circle cx="12" cy="11" r="2.5" fill="${colorHex}"/>` : ""}
+                </svg>`;
+            el.style.cursor = "pointer";
+            return el;
+        }
 
-        const myPinIcon = createPinIcon("#339989", true);     // Tapick Teal (Your Branch)
-        const otherPinIcon = createPinIcon("#2B2C28", false); // Charcoal (Other Branches)
-        const nearestPinIcon = createPinIcon("#E07A5F", false); // Coral (Nearest In-Stock)
+        const PIN_MINE    = "#339989";
+        const PIN_OTHER   = "#2B2C28";
+        const PIN_NEAREST = "#E07A5F";
 
-        // Plot All Branches
+        // ── Plot all branch markers ───────────────────────────────────────────
+        const lngLats = [];
+
         branchData.forEach((b) => {
             const isMine = b.is_user_branch;
-            const icon = isMine ? myPinIcon : otherPinIcon;
-            const marker = L.marker([b.lat, b.lng], { icon: icon }).addTo(markersLayer);
+            const el = makePinElement(isMine ? PIN_MINE : PIN_OTHER, isMine);
+            el.dataset.branchId = b.id;
 
-            const popupContent = `
+            const popupHtml = `
                 <div class="map-popup-card">
                     <strong class="map-popup-title">${b.name}</strong>
-                    ${isMine ? '<span class="map-popup-badge">Your Branch</span>' : '<span class="map-popup-dist">' + b.distance_km + ' km away</span>'}
+                    ${isMine
+                        ? '<span class="map-popup-badge">Your Branch</span>'
+                        : `<span class="map-popup-dist">${b.distance_km} km away</span>`}
                     <p class="map-popup-addr">${b.address}</p>
                     <p class="map-popup-phone">📞 <a href="tel:${b.phone}">${b.phone || "No phone listed"}</a></p>
                     ${!isMine ? `
                     <div style="margin-top: 8px;">
-                        <button type="button" class="btn btn-primary btn-sm btn-popup-notify" data-branch-id="${b.id}" data-branch-name="${b.name}">
+                        <button type="button" class="btn btn-primary btn-sm btn-popup-notify"
+                                data-branch-id="${b.id}" data-branch-name="${b.name}">
                             Notify this branch
                         </button>
-                    </div>` : ''}
-                </div>
-            `;
-            marker.bindPopup(popupContent);
-            b._marker = marker;
-            initialBounds.push([b.lat, b.lng]);
-        });
+                    </div>` : ""}
+                </div>`;
 
-        // Fit map initially to cover all branches
-        if (initialBounds.length > 0) {
-            map.fitBounds(initialBounds, { padding: [40, 40], maxZoom: 14 });
-        }
+            const popup = new maplibregl.Popup({ offset: [0, -38], closeButton: false })
+                .setHTML(popupHtml);
 
-        // Delegate popup "Notify this branch" clicks
-        map.on("popupopen", (e) => {
-            const popupEl = e.popup.getElement();
-            if (!popupEl) return;
-            const btn = popupEl.querySelector(".btn-popup-notify");
-            if (btn) {
-                btn.addEventListener("click", () => {
-                    openNotifyDialog({
-                        branchId: btn.dataset.branchId,
+            popup.on("open", () => {
+                const btn = popup.getElement()?.querySelector(".btn-popup-notify");
+                if (btn) {
+                    btn.addEventListener("click", () => {
+                        openNotifyDialog({ branchId: btn.dataset.branchId });
                     });
-                });
-            }
-        });
-
-        // Locator Search Elements
-        const searchInput = document.getElementById("mapSearchInput");
-        const searchBtn = document.getElementById("mapSearchBtn");
-        const resetBtn = document.getElementById("mapResetBtn");
-        const resultCard = document.getElementById("locatorResultCard");
-        const statusText = document.getElementById("mapStatusText");
-        const locateUrl = mapContainer.dataset.locateUrl;
-
-        // Reset View Handler
-        function resetMapView() {
-            if (searchInput) searchInput.value = "";
-            if (routeLine) {
-                map.removeLayer(routeLine);
-                routeLine = null;
-            }
-            if (resultCard) {
-                resultCard.hidden = true;
-                resultCard.innerHTML = "";
-            }
-            // Reset marker icons back to default
-            branchData.forEach((b) => {
-                if (b._marker) {
-                    b._marker.setIcon(b.is_user_branch ? myPinIcon : otherPinIcon);
                 }
             });
-            if (initialBounds.length > 0) {
-                map.flyToBounds(initialBounds, { padding: [40, 40], maxZoom: 14, duration: 0.8 });
-            }
-            if (statusText) {
-                statusText.textContent = `Showing all ${branchData.length} branch locations`;
+
+            const marker = new maplibregl.Marker({ element: el })
+                .setLngLat([b.lng, b.lat])
+                .setPopup(popup)
+                .addTo(map);
+
+            b._marker = marker;
+            b._el = el;
+            lngLats.push([b.lng, b.lat]);
+        });
+
+        // Fit map to show all branches after style loads
+        if (lngLats.length > 0) {
+            if (lngLats.length === 1) {
+                map.setCenter(lngLats[0]);
+                map.setZoom(13);
+            } else {
+                const bounds = lngLats.reduce(
+                    (b, c) => b.extend(c),
+                    new maplibregl.LngLatBounds(lngLats[0], lngLats[0])
+                );
+                initialBounds = bounds;
+                map.fitBounds(bounds, { padding: 60, maxZoom: 14 });
             }
         }
 
-        if (resetBtn) {
-            resetBtn.addEventListener("click", resetMapView);
+        // ── Locator helpers ───────────────────────────────────────────────────
+        const searchInput = document.getElementById("mapSearchInput");
+        const searchBtn   = document.getElementById("mapSearchBtn");
+        const resetBtn    = document.getElementById("mapResetBtn");
+        const resultCard  = document.getElementById("locatorResultCard");
+        const statusText  = document.getElementById("mapStatusText");
+        const locateUrl   = mapContainer.dataset.locateUrl;
+
+        function resetMarkerColors() {
+            branchData.forEach((b) => {
+                if (b._el) {
+                    const isMine = b.is_user_branch;
+                    b._el.innerHTML = makePinElement(isMine ? PIN_MINE : PIN_OTHER, isMine).innerHTML;
+                }
+            });
         }
 
-        // Search and locate nearest branch
+        function resetMapView() {
+            if (searchInput) searchInput.value = "";
+            if (resultCard) { resultCard.hidden = true; resultCard.innerHTML = ""; }
+            resetMarkerColors();
+            if (initialBounds) {
+                map.fitBounds(initialBounds, { padding: 60, maxZoom: 14, duration: 800 });
+            }
+            if (statusText) statusText.textContent = `Showing all ${branchData.length} branch locations`;
+        }
+
+        if (resetBtn) resetBtn.addEventListener("click", resetMapView);
+
         async function performSearch(query) {
             query = (query || "").trim();
             if (!query) return;
-
             if (statusText) statusText.textContent = `Locating nearest branch with "${query}" in stock...`;
 
             try {
@@ -357,102 +449,103 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!resp.ok) throw new Error("Search failed");
                 const data = await resp.json();
 
-                // Clear previous route line
-                if (routeLine) {
-                    map.removeLayer(routeLine);
-                    routeLine = null;
-                }
-
-                // Reset markers
-                branchData.forEach((b) => {
-                    if (b._marker) {
-                        b._marker.setIcon(b.is_user_branch ? myPinIcon : otherPinIcon);
-                    }
-                });
+                resetMarkerColors();
 
                 if (!data.results || data.results.length === 0) {
                     if (statusText) statusText.textContent = `No branches currently have "${query}" in stock.`;
-                    resultCard.hidden = false;
-                    resultCard.innerHTML = `
-                        <div class="locator-empty-msg">
-                            <strong>No stock found across branches for "${query}"</strong>
-                            <p>You can use "Notify branch" above to send a stock inquiry to other branches or head pharmacists.</p>
-                        </div>
-                    `;
+                    if (resultCard) {
+                        resultCard.hidden = false;
+                        resultCard.innerHTML = `
+                            <div class="locator-empty-msg">
+                                <strong>No stock found across branches for "${query}"</strong>
+                                <p>Use "Notify branch" to send a stock inquiry to other branches.</p>
+                            </div>`;
+                    }
                     return;
                 }
 
-                const nearest = data.results[0]; // Nearest branch with stock
+                const nearest = data.results[0];
                 if (statusText) {
                     statusText.textContent = `Found at ${data.results.length} branch(es). Nearest: ${nearest.branch_name} (${nearest.distance_km} km away).`;
                 }
 
-                // Draw connector line if user branch is known and different
-                const highlightBounds = [[nearest.lat, nearest.lng]];
-                if (data.user_branch && (data.user_branch.lat !== nearest.lat || data.user_branch.lng !== nearest.lng)) {
-                    routeLine = L.polyline(
-                        [[data.user_branch.lat, data.user_branch.lng], [nearest.lat, nearest.lng]],
-                        { color: "#339989", weight: 3.5, dashArray: "6, 8", opacity: 0.85 }
-                    ).addTo(map);
-                    highlightBounds.push([data.user_branch.lat, data.user_branch.lng]);
+                // Highlight nearest marker
+                const targetBranch = branchData.find((b) => b.id === nearest.branch_id);
+                if (targetBranch && targetBranch._el) {
+                    targetBranch._el.innerHTML = makePinElement(PIN_NEAREST, false).innerHTML;
+                    targetBranch._marker.togglePopup();
                 }
 
-                // Smoothly frame both user branch and nearest branch
-                if (highlightBounds.length > 1) {
-                    map.flyToBounds(highlightBounds, { padding: [60, 60], maxZoom: 15, duration: 1 });
-                } else {
-                    map.flyTo([nearest.lat, nearest.lng], 14, { duration: 1 });
-                }
+                // Draw route line using MapLibre source/layer
+                const routeCoords = [];
+                if (data.user_branch) routeCoords.push([data.user_branch.lng, data.user_branch.lat]);
+                routeCoords.push([nearest.lng, nearest.lat]);
 
-                // Highlight nearest branch marker
-                const targetBranchObj = branchData.find((b) => b.id === nearest.branch_id);
-                if (targetBranchObj && targetBranchObj._marker) {
-                    targetBranchObj._marker.setIcon(nearestPinIcon);
-                    targetBranchObj._marker.openPopup();
-                }
+                if (map.getLayer("route-line")) map.removeLayer("route-line");
+                if (map.getSource("route")) map.removeSource("route");
 
-                // Render Results Card with action to notify
-                resultCard.hidden = false;
-                resultCard.innerHTML = `
-                    <div class="locator-found-box">
-                        <div class="locator-found-head">
-                            <div>
-                                <span class="badge badge--ok">In Stock</span>
-                                <h3>${nearest.medicine_name}</h3>
-                                <p class="muted">Nearest location: <strong>${nearest.branch_name}</strong> &middot; <strong>${nearest.distance_km} km away</strong></p>
-                            </div>
-                            <div class="locator-stock-count">
-                                <strong>${nearest.quantity}</strong>
-                                <small>${nearest.unit}</small>
-                            </div>
-                        </div>
-                        <div class="locator-found-details">
-                            <p>📍 ${nearest.branch_address} &nbsp;|&nbsp; 📞 <a href="tel:${nearest.branch_phone}">${nearest.branch_phone}</a></p>
-                            <div class="locator-action-row">
-                                <button type="button" class="btn btn-primary btn-sm btn-notify-match"
-                                        data-branch-id="${nearest.branch_id}"
-                                        data-branch-name="${nearest.branch_name}"
-                                        data-med-id="${nearest.medicine_id}"
-                                        data-med-name="${nearest.medicine_name}">
-                                    <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                    Send notification to ${nearest.branch_name}
-                                </button>
-                                ${data.results.length > 1 ? '<span class="muted"><small>Also in stock at ' + (data.results.length - 1) + ' other branch(es).</small></span>' : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                // Connect the action button in the results card
-                const matchBtn = resultCard.querySelector(".btn-notify-match");
-                if (matchBtn) {
-                    matchBtn.addEventListener("click", () => {
-                        openNotifyDialog({
-                            branchId: matchBtn.dataset.branchId,
-                            medId: matchBtn.dataset.medId,
-                            note: `Stock request for ${matchBtn.dataset.medName}.`,
-                        });
+                if (routeCoords.length > 1) {
+                    map.addSource("route", {
+                        type: "geojson",
+                        data: { type: "Feature", geometry: { type: "LineString", coordinates: routeCoords } },
                     });
+                    map.addLayer({
+                        id: "route-line",
+                        type: "line",
+                        source: "route",
+                        paint: { "line-color": "#339989", "line-width": 3, "line-dasharray": [4, 6], "line-opacity": 0.85 },
+                    });
+                }
+
+                // Fly to cover nearest + user branch
+                const flyBounds = routeCoords.reduce(
+                    (b, c) => b.extend(c),
+                    new maplibregl.LngLatBounds(routeCoords[0], routeCoords[0])
+                );
+                map.fitBounds(flyBounds, { padding: 80, maxZoom: 15, duration: 1000 });
+
+                // Results card
+                if (resultCard) {
+                    resultCard.hidden = false;
+                    resultCard.innerHTML = `
+                        <div class="locator-found-box">
+                            <div class="locator-found-head">
+                                <div>
+                                    <span class="badge badge--ok">In Stock</span>
+                                    <h3>${nearest.medicine_name}</h3>
+                                    <p class="muted">Nearest: <strong>${nearest.branch_name}</strong> &middot; <strong>${nearest.distance_km} km away</strong></p>
+                                </div>
+                                <div class="locator-stock-count">
+                                    <strong>${nearest.quantity}</strong>
+                                    <small>${nearest.unit}</small>
+                                </div>
+                            </div>
+                            <div class="locator-found-details">
+                                <p>📍 ${nearest.branch_address} &nbsp;|&nbsp; 📞 <a href="tel:${nearest.branch_phone}">${nearest.branch_phone}</a></p>
+                                <div class="locator-action-row">
+                                    <button type="button" class="btn btn-primary btn-sm btn-notify-match"
+                                            data-branch-id="${nearest.branch_id}"
+                                            data-branch-name="${nearest.branch_name}"
+                                            data-med-id="${nearest.medicine_id}"
+                                            data-med-name="${nearest.medicine_name}">
+                                        <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                        Send notification to ${nearest.branch_name}
+                                    </button>
+                                    ${data.results.length > 1 ? `<span class="muted"><small>Also in stock at ${data.results.length - 1} other branch(es).</small></span>` : ""}
+                                </div>
+                            </div>
+                        </div>`;
+
+                    const matchBtn = resultCard.querySelector(".btn-notify-match");
+                    if (matchBtn) {
+                        matchBtn.addEventListener("click", () => {
+                            openNotifyDialog({
+                                branchId: matchBtn.dataset.branchId,
+                                medId: matchBtn.dataset.medId,
+                                note: `Stock request for ${matchBtn.dataset.medName}.`,
+                            });
+                        });
+                    }
                 }
             } catch (err) {
                 if (statusText) statusText.textContent = "Error locating stock across branches.";
@@ -462,10 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (searchBtn && searchInput) {
             searchBtn.addEventListener("click", () => performSearch(searchInput.value));
             searchInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    performSearch(searchInput.value);
-                }
+                if (e.key === "Enter") { e.preventDefault(); performSearch(searchInput.value); }
             });
         }
 
@@ -482,11 +572,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 mapContainer.scrollIntoView({ behavior: "smooth", block: "center" });
 
                 if (lat && lng) {
-                    map.flyTo([lat, lng], 14, { duration: 1 });
+                    map.flyTo({ center: [lng, lat], zoom: 14, duration: 1000 });
                     const bObj = branchData.find((b) => b.name === branchName);
-                    if (bObj && bObj._marker) {
-                        bObj._marker.openPopup();
-                    }
+                    if (bObj && bObj._marker) bObj._marker.togglePopup();
                     if (statusText) {
                         statusText.textContent = `Located "${medName}" at ${branchName}: ${qty} on hand (${dist} km away).`;
                     }

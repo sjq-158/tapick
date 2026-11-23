@@ -95,23 +95,6 @@
                 </dl>
             </section>
 
-            <!-- Role Scope & Responsibilities Card -->
-            <section class="card">
-                <div class="card-head">
-                    <h2>{{ role_info.title }} Scope</h2>
-                </div>
-                <p class="muted" style="font-size: 0.88rem; line-height: 1.45; margin-bottom: 14px;">
-                    {{ role_info.description }}
-                </p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
-                    {% for perm in role_info.permissions %}
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; background: var(--surface-2); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                        <svg class="icon-sm" viewBox="0 0 24 24" style="color: var(--accent);"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>{{ perm }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </section>
         </div>
     </div>
 </main>

@@ -512,6 +512,39 @@
     position: static;
     transform: none;
     margin-right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    transition: color 0.15s ease;
+}
+
+.auth-input-wrapper .toggle-password:hover {
+    color: var(--text);
+}
+
+.auth-input-wrapper .toggle-password .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.auth-input-wrapper .toggle-password .eye-off {
+    display: none;
+}
+
+.auth-input-wrapper .toggle-password.is-on .eye,
+.auth-input-wrapper .toggle-password.is-visible .eye {
+    display: none;
+}
+
+.auth-input-wrapper .toggle-password.is-on .eye-off,
+.auth-input-wrapper .toggle-password.is-visible .eye-off {
+    display: inline-block;
 }
 
 .field-group {

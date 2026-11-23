@@ -562,17 +562,28 @@ def reorder_analysis(request):
     """
     user = request.user
     company_id = user.company_id
+    branch_filter = request.GET.get("branch", "").strip()
+    search_query = request.GET.get("q", "").strip()
 
-    # Combines inventory records with medicine and branch details using SQL JOIN.
+    # Retrieve all inventory records joined with medicine and branch details using SQL JOIN.
     join_queryset = (
         Inventory.objects.filter(branch__company_id=company_id, medicine__is_active=True)
         .select_related("medicine", "branch")
         .order_by("medicine__medicine_name", "branch__branch_name")
     )
-    join_sql = str(join_queryset.query)
-    join_samples = list(join_queryset[:12])
 
-    # Identifies medicines whose stock is at or below reorder threshold using SQL SUBQUERY.
+    if branch_filter and branch_filter.isdigit():
+        join_queryset = join_queryset.filter(branch_id=int(branch_filter))
+
+    if search_query:
+        join_queryset = join_queryset.filter(
+            Q(medicine__medicine_name__icontains=search_query)
+            | Q(medicine__generic_name__icontains=search_query)
+        )
+
+    join_sql = str(join_queryset.query)
+
+    # Identify medicines whose stock is at or below reorder threshold using SQL SUBQUERY.
     inner_query = (
         Inventory.objects.filter(
             branch__company_id=company_id,
@@ -589,26 +600,44 @@ def reorder_analysis(request):
         )
         .order_by("medicine_name")
     )
-    subquery_sql = str(subquery_queryset.query)
-    subquery_samples = list(subquery_queryset[:12])
 
-    # Prints generated SQL queries to console for database inspection.
+    if search_query:
+        subquery_queryset = subquery_queryset.filter(
+            Q(medicine_name__icontains=search_query)
+            | Q(generic_name__icontains=search_query)
+        )
+
+    subquery_sql = str(subquery_queryset.query)
+
+    # Print generated SQL queries to console for database inspection.
     print("[SQL Audit] Inventory Multi-Branch Join (select_related):")
     print(join_sql)
     print("[SQL Audit] Reorder Threshold Subquery (Subquery):")
     print(subquery_sql)
 
+    branches = Branch.objects.filter(company_id=company_id, is_active=True).order_by("branch_name")
+
+    total_tracked = join_queryset.count()
+    critical_count = join_queryset.filter(quantity_on_hand__lte=F("reorder_threshold")).count()
+    out_count = join_queryset.filter(quantity_on_hand__lte=0).count()
+    subquery_count = subquery_queryset.count()
+
     return render(
         request,
         "inventory/reorder_analysis.html",
         {
-            "join_samples": join_samples,
+            "join_records": join_queryset,
             "join_sql": join_sql,
-            "subquery_samples": subquery_samples,
+            "subquery_records": subquery_queryset,
             "subquery_sql": subquery_sql,
             "inner_sql": inner_sql,
-            "join_count": join_queryset.count(),
-            "subquery_count": subquery_queryset.count(),
+            "total_tracked": total_tracked,
+            "critical_count": critical_count,
+            "out_count": out_count,
+            "subquery_count": subquery_count,
+            "branches": branches,
+            "selected_branch": int(branch_filter) if branch_filter and branch_filter.isdigit() else None,
+            "search_query": search_query,
         },
     )
 

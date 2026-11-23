@@ -4,7 +4,7 @@
 {% block title %}Inventory & Cross-Branch Locator — Tapick{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="{% static 'css/inventory/inventory.css' %}?v={% now 'U' %}">
 {% endblock %}
 
@@ -101,6 +101,10 @@
                     <button type="button" class="btn btn-ghost btn-sm" id="mapResetBtn" title="Reset map zoom to show all branches">
                         <span>Reset</span>
                     </button>
+                    <div class="map-view-switch" role="group" aria-label="Map perspective" style="display: inline-flex; gap: 4px; background: var(--surface-2); padding: 2px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <button type="button" class="btn btn-primary btn-sm is-active" id="btnMapDefault" title="Bright default 2D map view">Default</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnMap3D" title="3D perspective map view">3D</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -574,6 +578,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
 <script src="{% static 'js/inventory/inventory.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

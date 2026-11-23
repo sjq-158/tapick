@@ -10,30 +10,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     {% with prefs=user.usersettings %}
-    <script>
-        (function () {
-            var theme = "{% if prefs %}{% if prefs.dark_mode %}dark{% else %}light{% endif %}{% endif %}";
-            try {
-                if (theme) { localStorage.setItem("tapick-theme", theme); }
-                else { theme = localStorage.getItem("tapick-theme"); }
-            } catch (e) {}
-            if (!theme) {
-                theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            }
-            document.documentElement.setAttribute("data-theme", theme);
-        })();
-    </script>
+    
     {% endwith %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v={% now 'U' %}">
     {% if user.is_authenticated %}<link rel="stylesheet" href="{% static 'css/notifications/notifications.css' %}?v={% now 'U' %}">{% endif %}
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    {% block background_canvas %}
-    <!-- ShaderGradient Dynamic Canvas & Ambient Overlay (Across All Screens) -->
-    <canvas id="shaderGradientCanvas" class="shader-gradient-bg" aria-hidden="true"></canvas>
-    <div class="shader-gradient-overlay" aria-hidden="true"></div>
-    {% endblock %}
+    {% block background_canvas %}{% endblock %}
 
     {% block header %}
     <header class="app-header">
@@ -128,47 +112,12 @@
     {% block content %}{% endblock %}
         {% if user.is_authenticated %}<div class="live-toasts" id="liveToasts" aria-live="polite"></div>{% endif %}
 
-    <script>
-        (function () {
-            var root = document.documentElement;
-            var btn = document.getElementById("themeToggle");
-
-            btn.addEventListener("click", function () {
-                var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-                root.setAttribute("data-theme", next);
-                try { localStorage.setItem("tapick-theme", next); } catch (e) {}
-                window.dispatchEvent(new CustomEvent("themechange", { detail: next }));
-                if (btn.dataset.url) {
-                    fetch(btn.dataset.url, {
-                        method: "POST",
-                        credentials: "same-origin",
-                        headers: { "X-CSRFToken": btn.dataset.csrf, "Content-Type": "application/x-www-form-urlencoded" },
-                        body: "theme=" + next
-                    });
-                }
-            });
-
-            document.addEventListener("click", function (e) {
-                var toggle = e.target.closest(".toggle-password");
-                if (!toggle) return;
-                var input = document.getElementById(toggle.dataset.target);
-                if (!input) return;
-                var show = input.type === "password";
-                input.type = show ? "text" : "password";
-                toggle.classList.toggle("is-on", show);
-            });
-
-            var stack = document.getElementById("toastStack");
-            if (stack) {
-                setTimeout(function () { stack.classList.add("is-hiding"); }, 4500);
-            }
-        })();
-    </script>
+    
     <!-- Anime.js Core Engine & Global Screen Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-    <script src="{% static 'js/shadergradient.js' %}?v={% now 'U' %}"></script>
+    {% if not user.is_authenticated %}<script src="{% static 'js/shadergradient.js' %}?v={% now 'U' %}"></script>{% endif %}
     <script src="{% static 'js/animations.js' %}?v={% now 'U' %}"></script>
     {% if user.is_authenticated %}<script src="{% static 'js/notifications/notifications.js' %}?v={% now 'U' %}"></script>{% endif %}
     {% block extra_js %}{% endblock %}
-</body>
+<script src='{% static 'js/base.js' %}'></script></body>
 </html>

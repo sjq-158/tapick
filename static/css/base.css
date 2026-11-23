@@ -603,6 +603,37 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 
 .theme-fab { display: none; }
 
+.toggle-password {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease;
+}
+.toggle-password:hover {
+    color: var(--text);
+}
+.toggle-password .icon {
+    width: 18px;
+    height: 18px;
+}
+.toggle-password .eye-off {
+    display: none;
+}
+.toggle-password.is-on .eye,
+.toggle-password.is-visible .eye {
+    display: none;
+}
+.toggle-password.is-on .eye-off,
+.toggle-password.is-visible .eye-off {
+    display: inline-block;
+}
+
 /* Media queries for tablet and mobile devices */
 @media (max-width: 960px) {
     .grid-main, .grid-even, .grid-aside { grid-template-columns: 1fr; }
