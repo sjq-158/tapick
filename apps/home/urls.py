@@ -1,19 +1,10 @@
-# added - 09292026
 from django.urls import path
-from .views import HomeScreen
+from . import views
 
 app_name = "home"
 
 urlpatterns = [
-    path("", HomeScreen.as_view(), name="home"),
+    path("", views.HomeScreen.as_view(), name="home"),
+    path("calendar/events/", views.calendar_events, name="calendar_events"),
+    path("calendar/transaction/<int:sale_id>/", views.transaction_detail, name="transaction_detail"),
 ]
-
-# newly added - 09152026
-# from django.urls import path
-# from .views import HomeScreen
-
-# app_name = "home"
-
-# urlpatterns = [
-#     path("", HomeScreen.as_view(), name="home"),
-# ]

@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Dashboard — Tapick{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home/calendar.css' %}?v={% now 'U' %}">
+{% endblock %}
 
 {% block content %}
 <main class="page">
@@ -16,6 +21,7 @@
         {% endif %}
     </header>
 
+    <!-- Stock Alerts Section -->
     <section class="card">
         <div class="card-head">
             <h2>Stock alerts</h2>
@@ -66,42 +72,157 @@
         {% endif %}
     </section>
 
-    <section class="card">
-        <div class="card-head"><h2>Recent sales</h2></div>
-        {% if recent_sales %}
-        <div class="table-wrap">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Sale</th>
-                        {% if scope_count > 1 %}<th>Branch</th>{% endif %}
-                        <th>Cashier</th>
-                        <th class="num">Total</th>
-                        <th>When</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sale in recent_sales %}
-                    <tr>
-                        <td>#{{ sale.sale_id }}</td>
-                        {% if scope_count > 1 %}<td>{{ sale.branch.branch_name }}</td>{% endif %}
-                        <td><small>{{ sale.user.email }}</small></td>
-                        <td class="num">&#8369;{{ sale.total_amount|floatformat:"2g" }}</td>
-                        <td><small>{{ sale.sold_at|date:"M j, g:i A" }}</small></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Notion-Style Transaction & Activity Calendar -->
+    <section class="notion-calendar-card" id="notionCalendar"
+             data-events-url="{% url 'home:calendar_events' %}"
+             data-detail-url-template="{% url 'home:transaction_detail' 0 %}">
+        
+        <!-- Notion Window Dots -->
+        <div class="notion-window-dots">
+            <span class="notion-dot notion-dot--red"></span>
+            <span class="notion-dot notion-dot--yellow"></span>
+            <span class="notion-dot notion-dot--green"></span>
         </div>
-        {% else %}
-        <div class="empty">
-            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            <h3>No sales recorded</h3>
-            <p>Transactions logged for {{ scope_label }} will appear here.</p>
+
+        <!-- Notion Page Header Block -->
+        <div class="notion-title-row">
+            <div class="notion-page-icon">🗓️</div>
+            <div class="notion-title-content">
+                <h2 class="notion-calendar-title">My Calendar</h2>
+                <p class="notion-tip">
+                    <strong>Notion Tip:</strong> Use this calendar to consolidate all branch sales transactions, dispensing records, and daily activities in one place, allowing you to plan, oversee, and audit your time efficiently.
+                </p>
+                <p class="notion-instruction">
+                    &darr; Click through the different database tabs to view and organize your activities in different ways.
+                </p>
+            </div>
         </div>
-        {% endif %}
+
+        <!-- Notion Database Tabs & Scope Toolbar -->
+        <div class="notion-database-bar">
+            <div class="notion-tabs" role="tablist">
+                <button type="button" class="notion-tab-btn is-active" data-tab="tabMonthly" role="tab" aria-selected="true">
+                    <span>🗓️</span>
+                    <span>Monthly calendar</span>
+                </button>
+                <button type="button" class="notion-tab-btn" data-tab="tabTransactions" role="tab" aria-selected="false">
+                    <span>📋</span>
+                    <span>Recent transactions</span>
+                </button>
+                <button type="button" class="notion-tab-btn" data-tab="tabActivities" role="tab" aria-selected="false">
+                    <span>📊</span>
+                    <span>All activities</span>
+                </button>
+            </div>
+
+            <div class="notion-toolbar-right">
+                {% if is_admin %}
+                <!-- Admin Branch Overseer Selector (Read-Only) -->
+                <div class="notion-branch-select-wrap" title="Oversee transactions across company branches (Cannot edit)">
+                    <label for="notionBranchSelect">Branch:</label>
+                    <select id="notionBranchSelect" class="notion-branch-select">
+                        <option value="">All Branches</option>
+                        {% for b in branches %}
+                        <option value="{{ b.branch_id }}">{{ b.branch_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <span class="notion-scope-pill" title="Admins can oversee transactions across all branches but cannot edit records">
+                    Admin Overseer Mode &middot; Read Only
+                </span>
+                {% else %}
+                <!-- Pharmacist and Head Pharmacist Strict Branch Badge -->
+                <div class="notion-branch-badge" title="Transactions are strictly bound to your assigned branch">
+                    <span>📍</span>
+                    <span>{{ scope_label }}</span>
+                </div>
+                <span class="notion-scope-pill">Strict Branch Scope</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab 1: Monthly Calendar Grid -->
+        <div class="notion-tab-content is-active" id="tabMonthly">
+            <!-- Navigation controls for Month -->
+            <div class="notion-nav-row">
+                <div class="notion-current-month" id="notionCurrentMonth">
+                    {{ calendar_data.month_name }} {{ calendar_data.year }}
+                </div>
+                <div class="notion-month-controls">
+                    <button type="button" class="notion-icon-nav-btn" id="notionPrevMonth" aria-label="Previous month" title="Previous month">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <button type="button" class="notion-today-btn" id="notionTodayBtn" title="Jump to current date">
+                        Today
+                    </button>
+                    <button type="button" class="notion-icon-nav-btn" id="notionNextMonth" aria-label="Next month" title="Next month">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendar Table Grid -->
+            <div class="notion-calendar-table" style="margin-top: 14px;">
+                <div class="notion-week-header">
+                    <div class="notion-day-name">Sun</div>
+                    <div class="notion-day-name">Mon</div>
+                    <div class="notion-day-name">Tue</div>
+                    <div class="notion-day-name">Wed</div>
+                    <div class="notion-day-name">Thu</div>
+                    <div class="notion-day-name">Fri</div>
+                    <div class="notion-day-name">Sat</div>
+                </div>
+                <div class="notion-days-grid" id="notionDaysGrid">
+                    <!-- Populated dynamically by calendar.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Recent Transactions Table -->
+        <div class="notion-tab-content" id="tabTransactions">
+            <div class="notion-table-wrap">
+                <table class="notion-table">
+                    <thead>
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Branch</th>
+                            <th>Handled By</th>
+                            <th>Total Amount</th>
+                            <th>When</th>
+                            <th style="width: 1%; white-space: nowrap;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notionTxTableBody">
+                        <!-- Populated dynamically by calendar.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: All Activities & Summary Metrics -->
+        <div class="notion-tab-content" id="tabActivities">
+            <div class="notion-metrics-grid">
+                <div class="notion-metric-box">
+                    <span class="label">Total Transactions</span>
+                    <span class="value" id="metricTotalSales">{{ calendar_data.total_sales_count }}</span>
+                    <span class="hint">Sales recorded for this month</span>
+                </div>
+                <div class="notion-metric-box">
+                    <span class="label">Total Revenue</span>
+                    <span class="value" id="metricRevenue">&#8369;{{ calendar_data.total_revenue|floatformat:"2g" }}</span>
+                    <span class="hint">Dispensing sales volume</span>
+                </div>
+                <div class="notion-metric-box">
+                    <span class="label">Avg Transaction Value</span>
+                    <span class="value" id="metricAvgTicket">&#8369;0.00</span>
+                    <span class="hint">Average ticket size</span>
+                </div>
+            </div>
+        </div>
+
     </section>
 
+    <!-- Branch Directory Section -->
     <section class="card">
         <div class="card-head">
             <h2>Branch directory</h2>
@@ -129,4 +250,78 @@
         {% endif %}
     </section>
 </main>
+
+<!-- Notion-Style Transaction Details Modal -->
+<dialog class="modal notion-modal" id="notionTxModal" aria-labelledby="modalSaleId">
+    <div class="notion-modal-inner">
+        <div class="notion-modal-head">
+            <div class="notion-modal-title-wrap">
+                <div class="notion-modal-icon">🧾</div>
+                <div>
+                    <h3 class="notion-modal-title">Transaction <span id="modalSaleId">#0</span></h3>
+                    <p class="notion-modal-sub" id="modalDateTime">Date &amp; Time</p>
+                </div>
+            </div>
+            <button type="button" class="icon-btn" data-close aria-label="Close dialog">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <!-- Notion Properties Grid -->
+        <div class="notion-prop-grid">
+            <div class="notion-prop-row">
+                <span class="notion-prop-name">🏢 Branch</span>
+                <span class="notion-prop-val" id="modalBranch">Branch Name</span>
+            </div>
+            <div class="notion-prop-row">
+                <span class="notion-prop-name">👤 Handled By</span>
+                <span class="notion-prop-val" id="modalCashier">Cashier Name</span>
+            </div>
+            <div class="notion-prop-row">
+                <span class="notion-prop-name">💵 Total Amount</span>
+                <span class="notion-prop-val" style="color: var(--accent-text); font-size: 1.05rem;" id="modalTotalAmount">&#8369;0.00</span>
+            </div>
+            <div class="notion-prop-row">
+                <span class="notion-prop-name">🛡️ Scope &amp; Access</span>
+                <span class="notion-prop-val" id="modalRoleBadge">Verified</span>
+            </div>
+        </div>
+
+        <!-- Items Dispensed Section -->
+        <div class="notion-items-section">
+            <div class="notion-items-title">Dispensed Items Breakdown</div>
+            <div class="notion-table-wrap">
+                <table class="notion-items-table">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Category</th>
+                            <th class="num">Quantity</th>
+                            <th class="num">Unit Price</th>
+                            <th class="num">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalItemsBody">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Notion Modal Footer -->
+        <div class="notion-modal-footer">
+            <p class="notion-overseer-notice" id="modalOverseerNotice">
+                Admin Notice: Records are read-only and immutable for compliance audit trails.
+            </p>
+            <button type="button" class="btn btn-ghost btn-sm" data-close>
+                Close
+            </button>
+        </div>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script id="calendarInitialData" type="application/json">{{ calendar_json|safe }}</script>
+<script src="{% static 'js/home/calendar.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

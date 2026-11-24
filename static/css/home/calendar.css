@@ -1,0 +1,626 @@
+/* Notion-style Calendar Component for Tapick Dashboard */
+
+.notion-calendar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 24px 28px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Notion window header decoration */
+.notion-window-dots {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 4px;
+}
+
+.notion-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.notion-dot--red    { background: #ff5f56; border: 1px solid #e0443e; }
+.notion-dot--yellow { background: #ffbd2e; border: 1px solid #dea123; }
+.notion-dot--green  { background: #27c93f; border: 1px solid #1aab29; }
+
+/* Notion page title block */
+.notion-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.notion-page-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.notion-title-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.notion-calendar-title {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.notion-tip {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.45;
+    max-width: 85ch;
+    margin-top: 4px;
+}
+
+.notion-tip strong {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.notion-instruction {
+    font-size: 0.82rem;
+    color: var(--accent-text);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Notion Database Navigation & Tab Bar */
+.notion-database-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.notion-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notion-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.notion-tab-btn:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+
+.notion-tab-btn.is-active {
+    color: var(--text);
+    font-weight: 700;
+    border-bottom: 2px solid var(--text);
+    background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+
+.notion-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.notion-branch-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent-text);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    white-space: nowrap;
+}
+
+.notion-branch-select-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px 10px;
+}
+
+.notion-branch-select-wrap label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.notion-branch-select {
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 4px 4px;
+    cursor: pointer;
+    outline: none;
+}
+
+.notion-scope-pill {
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+}
+
+/* Month navigation and controls */
+.notion-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.notion-current-month {
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text);
+}
+
+.notion-month-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.notion-icon-nav-btn {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notion-icon-nav-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+}
+
+.notion-today-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notion-today-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+}
+
+/* Calendar Grid Structure */
+.notion-calendar-table {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.notion-week-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.notion-day-name {
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: capitalize;
+}
+
+.notion-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.notion-day-cell {
+    min-height: 110px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg);
+    transition: background 0.15s ease;
+    position: relative;
+}
+
+.notion-day-cell:nth-child(7n) {
+    border-right: none;
+}
+
+.notion-day-cell.is-other-month {
+    background: color-mix(in srgb, var(--surface-2) 35%, var(--bg));
+    opacity: 0.65;
+}
+
+.notion-day-cell.is-today {
+    background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+.notion-day-cell-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 2px;
+}
+
+.notion-day-num {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 2px 6px;
+    border-radius: 999px;
+}
+
+.notion-day-cell.is-today .notion-day-num {
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 800;
+}
+
+/* Notion Transaction Cards inside days */
+.notion-event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    text-align: left;
+}
+
+.notion-event-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    background: color-mix(in srgb, var(--surface) 90%, var(--accent));
+}
+
+.notion-event-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notion-event-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notion-more-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+
+.notion-more-chip:hover {
+    background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* View 2: Recent transactions table */
+.notion-tab-content {
+    display: none;
+}
+
+.notion-tab-content.is-active {
+    display: block;
+}
+
+.notion-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.notion-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.notion-table th {
+    background: var(--surface-2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.notion-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    vertical-align: middle;
+}
+
+.notion-table tr:hover td {
+    background: var(--surface-2);
+}
+
+/* View 3: Metrics summary grid */
+.notion-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.notion-metric-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.notion-metric-box .label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.notion-metric-box .value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+}
+
+.notion-metric-box .hint {
+    font-size: 0.74rem;
+    color: var(--muted);
+}
+
+/* Notion Transaction Details Modal */
+.notion-modal {
+    max-width: 620px;
+    width: 90vw;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--bg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    padding: 0;
+    overflow: hidden;
+}
+
+.notion-modal::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.notion-modal-inner {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.notion-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.notion-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notion-modal-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.notion-modal-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text);
+    margin: 0;
+}
+
+.notion-modal-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.notion-prop-grid {
+    display: grid;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+}
+
+.notion-prop-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.84rem;
+    padding: 4px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.notion-prop-row:last-child {
+    border-bottom: none;
+}
+
+.notion-prop-name {
+    color: var(--muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.notion-prop-val {
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+}
+
+.notion-items-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notion-items-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+}
+
+.notion-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.notion-items-table th {
+    background: var(--surface-2);
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.notion-items-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.notion-items-table tr:last-child td {
+    border-bottom: none;
+}
+
+.notion-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.notion-overseer-notice {
+    font-size: 0.76rem;
+    color: var(--muted);
+    max-width: 44ch;
+    line-height: 1.35;
+}
+
+@media (max-width: 860px) {
+    .notion-day-cell {
+        min-height: 80px;
+        padding: 4px;
+    }
+    .notion-event-card {
+        padding: 4px;
+    }
+    .notion-event-title {
+        font-size: 0.72rem;
+    }
+    .notion-event-sub {
+        display: none;
+    }
+}
