@@ -97,15 +97,10 @@
     <section class="reorder-section" id="part1Join">
         <div class="reorder-section-head">
             <div class="reorder-section-title">
-                <h2>Part 1: Multi-Branch Stock Overview (SQL JOIN)</h2>
-                <span class="reorder-pill">SQL JOIN &middot; select_related</span>
+                <h2>Part 1: Multi-Branch Stock Overview</h2>
             </div>
             <span class="badge badge--muted">{{ join_records|length }} record{{ join_records|length|pluralize }}</span>
         </div>
-
-        <p class="muted" style="font-size: 0.9rem; margin-top: -8px;">
-            Audits stock levels across all company branches by combining the <code>inventory</code> table with related <code>medicine</code> and <code>branch</code> records.
-        </p>
 
         <!-- Relational Schema & SQL Query Inspector for Part 1 (JOIN) -->
         <details class="sql-inspector">
@@ -195,15 +190,10 @@
     <section class="reorder-section" id="part2Subquery">
         <div class="reorder-section-head">
             <div class="reorder-section-title">
-                <h2>Part 2: Critical Stock Reorder Analysis (SQL SUBQUERY)</h2>
-                <span class="reorder-pill">SQL SUBQUERY &middot; Subquery()</span>
+                <h2>Part 2: Critical Stock Reorder Analysis</h2>
             </div>
             <span class="badge badge--warn">{{ subquery_records|length }} to reorder</span>
         </div>
-
-        <p class="muted" style="font-size: 0.9rem; margin-top: -8px;">
-            Identifies catalogue medicines whose quantity in any branch has reached or fallen below the branch reorder threshold.
-        </p>
 
         <!-- Relational Schema & SQL Query Inspector for Part 2 (SUBQUERY) -->
         <details class="sql-inspector">
