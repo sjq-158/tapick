@@ -29,6 +29,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("adjust_amount").focus();
             });
         });
+
+        // Auto-open restock modal when coming from Restock Item button
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("action") === "restock") {
+                const firstAdjustBtn = document.querySelector("[data-adjust]");
+                if (firstAdjustBtn) {
+                    setTimeout(() => firstAdjustBtn.click(), 150);
+                }
+            }
+        } catch (e) {}
     }
 
     // ── Branch Notification Modal & Confirmation Step ─────────────────────────

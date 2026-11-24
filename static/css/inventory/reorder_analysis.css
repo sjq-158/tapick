@@ -114,11 +114,12 @@
     border-radius: var(--radius-md);
     background: var(--surface-2);
     overflow: hidden;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .sql-inspector[open] {
     background: var(--surface);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
 .sql-inspector summary {
@@ -132,6 +133,7 @@
     justify-content: space-between;
     list-style: none;
     user-select: none;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .sql-inspector summary::-webkit-details-marker {
@@ -140,23 +142,76 @@
 
 .sql-inspector summary:hover {
     color: var(--text);
-    background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
 }
 
 .sql-inspector-summary-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .sql-tag {
     font-size: 0.72rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
     background: var(--accent);
     color: #fff;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.sql-inspector-title {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.88rem;
+}
+
+.sql-inspector-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sql-inspector summary:hover .sql-inspector-toggle-btn {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.sql-chevron {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    fill: none;
+    transition: transform 0.25s ease;
+}
+
+.sql-inspector[open] .sql-chevron {
+    transform: rotate(180deg);
+}
+
+.sql-toggle-opened {
+    display: none;
+}
+
+.sql-inspector[open] .sql-toggle-closed {
+    display: none;
+}
+
+.sql-inspector[open] .sql-toggle-opened {
+    display: inline;
 }
 
 .sql-inspector-body {
@@ -233,6 +288,7 @@
     text-transform: uppercase;
     color: var(--muted);
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .reorder-table td {
@@ -247,4 +303,54 @@
 
 .reorder-table tr:hover td {
     background: var(--surface-2);
+}
+
+.reorder-action-header {
+    white-space: nowrap;
+    width: 1%;
+    text-align: right;
+}
+
+.reorder-action-cell {
+    white-space: nowrap;
+    width: 1%;
+    text-align: right;
+}
+
+.btn-restock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--primary);
+    color: var(--on-primary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    border: 1px solid transparent;
+    line-height: 1.25;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 22%, transparent);
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-restock:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.btn-restock:active {
+    transform: none;
+}
+
+.btn-restock svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    flex-shrink: 0;
 }
