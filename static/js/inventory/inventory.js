@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ? '<span class="map-popup-badge">Your Branch</span>'
                         : `<span class="map-popup-dist">${b.distance_km} km away</span>`}
                     <p class="map-popup-addr">${b.address}</p>
-                    <p class="map-popup-phone">📞 <a href="tel:${b.phone}">${b.phone || "No phone listed"}</a></p>
+                    <p class="map-popup-phone"><svg class="icon-sm" viewBox="0 0 24 24" style="width:12px;height:12px;display:inline-block;vertical-align:-1px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> <a href="tel:${b.phone}">${b.phone || "No phone listed"}</a></p>
                     ${!isMine ? `
                     <div style="margin-top: 8px;">
                         <button type="button" class="btn btn-primary btn-sm btn-popup-notify"

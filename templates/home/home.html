@@ -86,15 +86,11 @@
 
         <!-- Notion Page Header Block -->
         <div class="notion-title-row">
-            <div class="notion-page-icon">🗓️</div>
+            <div class="notion-page-icon" aria-hidden="true">
+                <svg class="icon-lg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
             <div class="notion-title-content">
                 <h2 class="notion-calendar-title">My Calendar</h2>
-                <p class="notion-tip">
-                    <strong>Notion Tip:</strong> Use this calendar to consolidate all branch sales transactions, dispensing records, and daily activities in one place, allowing you to plan, oversee, and audit your time efficiently.
-                </p>
-                <p class="notion-instruction">
-                    &darr; Click through the different database tabs to view and organize your activities in different ways.
-                </p>
             </div>
         </div>
 
@@ -102,15 +98,15 @@
         <div class="notion-database-bar">
             <div class="notion-tabs" role="tablist">
                 <button type="button" class="notion-tab-btn is-active" data-tab="tabMonthly" role="tab" aria-selected="true">
-                    <span>🗓️</span>
+                    <svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     <span>Monthly calendar</span>
                 </button>
                 <button type="button" class="notion-tab-btn" data-tab="tabTransactions" role="tab" aria-selected="false">
-                    <span>📋</span>
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                     <span>Recent transactions</span>
                 </button>
                 <button type="button" class="notion-tab-btn" data-tab="tabActivities" role="tab" aria-selected="false">
-                    <span>📊</span>
+                    <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                     <span>All activities</span>
                 </button>
             </div>
@@ -133,7 +129,7 @@
                 {% else %}
                 <!-- Pharmacist and Head Pharmacist Strict Branch Badge -->
                 <div class="notion-branch-badge" title="Transactions are strictly bound to your assigned branch">
-                    <span>📍</span>
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                     <span>{{ scope_label }}</span>
                 </div>
                 <span class="notion-scope-pill">Strict Branch Scope</span>
@@ -256,7 +252,9 @@
     <div class="notion-modal-inner">
         <div class="notion-modal-head">
             <div class="notion-modal-title-wrap">
-                <div class="notion-modal-icon">🧾</div>
+                <div class="notion-modal-icon" aria-hidden="true">
+                    <svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
                 <div>
                     <h3 class="notion-modal-title">Transaction <span id="modalSaleId">#0</span></h3>
                     <p class="notion-modal-sub" id="modalDateTime">Date &amp; Time</p>
@@ -270,19 +268,31 @@
         <!-- Notion Properties Grid -->
         <div class="notion-prop-grid">
             <div class="notion-prop-row">
-                <span class="notion-prop-name">🏢 Branch</span>
+                <span class="notion-prop-name">
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>
+                    Branch
+                </span>
                 <span class="notion-prop-val" id="modalBranch">Branch Name</span>
             </div>
             <div class="notion-prop-row">
-                <span class="notion-prop-name">👤 Handled By</span>
+                <span class="notion-prop-name">
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Handled By
+                </span>
                 <span class="notion-prop-val" id="modalCashier">Cashier Name</span>
             </div>
             <div class="notion-prop-row">
-                <span class="notion-prop-name">💵 Total Amount</span>
+                <span class="notion-prop-name">
+                    <svg class="icon-sm" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                    Total Amount
+                </span>
                 <span class="notion-prop-val" style="color: var(--accent-text); font-size: 1.05rem;" id="modalTotalAmount">&#8369;0.00</span>
             </div>
             <div class="notion-prop-row">
-                <span class="notion-prop-name">🛡️ Scope &amp; Access</span>
+                <span class="notion-prop-name">
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Scope &amp; Access
+                </span>
                 <span class="notion-prop-val" id="modalRoleBadge">Verified</span>
             </div>
         </div>

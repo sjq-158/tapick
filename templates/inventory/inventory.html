@@ -200,7 +200,8 @@
                                 {% if row.nearest_branch %}
                                 <div class="nearest-stock-badge">
                                     <span class="nearest-stock-text">
-                                        📍 <strong>{{ row.nearest_branch.branch_name }}</strong>: {{ row.nearest_qty }} on hand (<strong>{{ row.nearest_distance }} km</strong> away)
+                                        <svg class="icon-sm" viewBox="0 0 24 24" style="width: 13px; height: 13px; vertical-align: -2px; display: inline-block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                        <strong>{{ row.nearest_branch.branch_name }}</strong>: {{ row.nearest_qty }} on hand (<strong>{{ row.nearest_distance }} km</strong> away)
                                     </span>
                                     <div class="nearest-stock-actions">
                                         <button type="button" class="btn-locate-link"
